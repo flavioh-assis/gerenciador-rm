@@ -1,0 +1,50 @@
+:root {
+  --mvmi_blue: #1f2797;
+  --mvmi_green: #82bf71;
+  --gray: #bbb;
+  --btn_green: #009B00;
+  --btn_green_hover: #42bb21;
+  --btn_orange: #cc7500;
+  --btn_orange_hover: #ff6700;
+  --btn_red: #cc3232;
+  --btn_red_hover: #f00;
+  font-size: 60%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+p {
+  display: block;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+
+body {
+  background: var(--gray);
+}
+
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body,
+input,
+button,
+textarea {
+  font: 500 1.6rem Archivo;
+  color: #000;
+}
+
+.container {
+  display: flex;
+  flex: 1;
+  padding-left: calc(100vw - 100%);
+}
