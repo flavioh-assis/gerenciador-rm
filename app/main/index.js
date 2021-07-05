@@ -24,8 +24,12 @@ app.on('window-all-closed', () => {
 
 app.on('ready', async () => {
   mainWindow = new BrowserWindow({
+    width: 1366,
+    height: 880,
     minWidth: 1160,
-    minHeight: 900,
+    minHeight: 800,
+    maxWidth: 1366,
+    maxHeight: 880,
     show: false,
     webPreferences: {
       nodeIntegration: true,
