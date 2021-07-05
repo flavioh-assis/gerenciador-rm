@@ -1,0 +1,88 @@
+.fields_table {
+  display: flex;
+  flex-direction: column;
+  margin: 0 5%;
+  max-width: 1300px;
+  width: 90%;
+}
+.fields {
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-columns: 1fr 11rem 11rem 1fr;
+  grid-template-areas: 'aluno data ra mae';
+
+  border-top: solid #fff 3px;
+  border-right: solid #fff 3px;
+  border-left: solid #fff 3px;
+  border-top-right-radius: 10px;
+  border-top-left-radius: 10px;
+  padding: 1rem;
+}
+#nomeAluno {
+  grid-area: aluno;
+}
+#dataNasc {
+  grid-area: data;
+}
+#ra {
+  grid-area: ra;
+}
+#nomeMae {
+  grid-area: mae;
+}
+.buttons {
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-areas: 'incluir pesquisar limpar';
+  padding: 0 1rem 1rem 1rem;
+
+  border-bottom: solid #fff 3px;
+  border-left: solid #fff 3px;
+  border-right: solid #fff 3px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin-bottom: 2rem;
+}
+#incluir {
+  grid-area: incluir;
+  background: var(--btn_green);
+}
+#incluir:hover {
+  background: var(--btn_green_hover);
+  text-decoration: underline;
+}
+#pesquisar {
+  grid-area: pesquisar;
+  background: var(--btn_orange);
+}
+#pesquisar:hover {
+  background: var(--btn_orange_hover);
+  text-decoration: underline;
+}
+#limpar {
+  grid-area: limpar;
+  background: var(--btn_red);
+}
+#limpar:hover {
+  background: var(--btn_red_hover);
+  text-decoration: underline;
+}
+/* ------------------ fields ------------------------- */
+.fields .MuiInputLabel-outlined,
+.fields label.Mui-focused,
+.fields .MuiOutlinedInput-root {
+  color: #fff;
+}
+.fields .MuiOutlinedInput-root fieldset {
+  border-color: #fff;
+}
+.fields .MuiOutlinedInput-root:hover fieldset,
+.fields .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: var(--mvmi_green);
+}
+/* ------------------ buttons ------------------------- */
+.buttons button {
+  font: 700 1.1rem Archivo;
+  padding: 0.75rem;
+}
