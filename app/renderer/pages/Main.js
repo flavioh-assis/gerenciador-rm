@@ -7,9 +7,9 @@ export default () => {
       <div className='page'>
         <div className='titulo'>
           <p id='title'>GERENCIADOR DE RM</p>
-
-          <FieldsTable />
         </div>
+        
+        <FieldsTable />
       </div>
     </div>
   )
