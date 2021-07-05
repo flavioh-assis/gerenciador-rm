@@ -11,6 +11,7 @@ yarn-error.log*
 node_modules/
 dist/
 dist-assets/
+build/
 
 .DS_Store
 .env
@@ -75,5 +76,7 @@ ts-gen
 
 # Used to accelerate builds after sync
 patches/mtime-cache.json
+
+# database
 app/api/database/db_rel_freq.sqlite3
 *.sqlite3
