@@ -1,6 +1,6 @@
 :root {
   --mvmi_blue: #1f2797;
-  --mvmi_green: #82bf71;
+  --mvmi_green: #749d27;
   --gray: #bbb;
   --btn_green: #009B00;
   --btn_green_hover: #42bb21;
@@ -8,7 +8,6 @@
   --btn_orange_hover: #ff6700;
   --btn_red: #cc3232;
   --btn_red_hover: #f00;
-  font-size: 60%;
 }
 
 * {
@@ -26,7 +25,7 @@ p {
 }
 
 body {
-  background: var(--gray);
+  background: var(--mvmi_blue);
 }
 
 #root {
