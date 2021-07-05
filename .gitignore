@@ -80,3 +80,6 @@ patches/mtime-cache.json
 # database
 app/api/database/db_rel_freq.sqlite3
 *.sqlite3
+build/renderer/index.html
+build/renderer/pages/Main.js
+build/main/index.js
