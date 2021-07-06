@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Button, TextField } from '@material-ui/core'
+import { DataGrid } from '@material-ui/data-grid'
 const { dialog } = require('electron').remote
 
 export default () => {
@@ -7,25 +8,42 @@ export default () => {
   const [dataNasc, setDataNasc] = useState('')
   const [ra, setRA] = useState('')
   const [nomeMae, setNomeMae] = useState('')
+  const [alunos, setAlunos] = useState([])
 
   const columns = [
-    { field: 'rm', headerName: 'RM', width: 50 },
     {
+      align: 'center',
+      field: 'id',
+      headerName: 'RM',
+      width: 80,
+      headerAlign: 'center',
+    },
+    {
+      align: 'center',
       field: 'aluno',
-      headerName: 'Aluno',
-      width: 205,
+      flex: 1,
+      headerName: 'Nome do Aluno',
       headerAlign: 'center',
     },
     {
+      align: 'center',
       field: 'data_nasc',
-      headerName: 'Data Nascimento',
-      width: 170,
+      headerName: 'Data Nasc.',
+      width: 140,
       headerAlign: 'center',
     },
     {
+      align: 'center',
+      field: 'ra',
+      headerName: 'R.A.',
+      width: 180,
+      headerAlign: 'center',
+    },
+    {
+      align: 'center',
       field: 'mae',
+      flex: 1,
       headerName: 'Nome da Mãe',
-      width: 205,
       headerAlign: 'center',
     },
   ]
@@ -96,6 +114,16 @@ export default () => {
         </Button>
       </div>
 
+      <div className='table'>
+        <DataGrid
+          autoHeight
+          columns={columns}
+          disableColumnMenu={true}
+          pageSize={10}
+          rows={alunos}
+          rowHeight={45}
+        />
+      </div>
     </div>
   )
 }

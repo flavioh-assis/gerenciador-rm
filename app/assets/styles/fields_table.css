@@ -1,7 +1,7 @@
 .fields_table {
   display: flex;
   flex-direction: column;
-  margin: 0 5%;
+  margin: 0 5% 5% 5%;
   max-width: 1300px;
   width: 90%;
 }
@@ -46,7 +46,7 @@
 }
 #incluir {
   grid-area: incluir;
-  background: var(--btn_green);
+  background: var(--mvmi_green);
 }
 #incluir:hover {
   background: var(--btn_green_hover);
@@ -84,5 +84,37 @@
 /* ------------------ buttons ------------------------- */
 .buttons button {
   font: 700 1.1rem Archivo;
-  padding: 0.75rem;
+  padding: 0.85rem;
+}
+/* ------------------ datagrid ------------------------- */
+.MuiDataGrid-columnsContainer {
+  background: var(--mvmi_blue);
+  color: #fff;
+  font: 100 1.2rem Archivo;
+}
+.MuiDataGrid-window {
+  background: var(--mvmi_green);
+  color: #000;
+  font: 100 1.1rem Archivo;
+}
+.fields_table .MuiDataGrid-root {
+  border: solid #fff 3px;
+  border-radius: 10px;
+}
+.MuiDataGrid-footer.MuiDataGrid-footer-justifyContentEnd {
+  background: var(--mvmi_blue);
+}
+.MuiDataGrid-footer.MuiDataGrid-footer-paginationAvailable {
+  background: var(--mvmi_blue);
+  font-size: 0;
+}
+.MuiTablePagination-caption.MuiTypography-body2 {
+  color: #fff;
+  font: 100 1.2rem Archivo;
+}
+.MuiButtonBase-root.MuiIconButton-root {
+  color: #fff;
+}
+.MuiButtonBase-root.MuiIconButton-root .MuiSvgIcon-root {
+  font-size: 1.5rem;
 }
