@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button, TextField } from '@material-ui/core'
 import { DataGrid } from '@material-ui/data-grid'
 const { dialog } = require('electron').remote
+import InputMask from 'react-input-mask'
 
 export default () => {
   const [nomeAluno, setNomeAluno] = useState('')
@@ -67,21 +68,21 @@ export default () => {
           variant='outlined'
         />
 
-        <TextField
+        <InputMask
           id='dataNasc'
-          label='Data de Nascimento'
           onChange={(t) => setDataNasc(t.target.value)}
-          value={dataNasc}
-          variant='outlined'
-        />
+          mask='99/99/9999'
+          value={dataNasc}>
+          {() => <TextField label='Data de Nascimento' variant='outlined' />}
+        </InputMask>
 
-        <TextField
+        <InputMask
           id='ra'
-          label='R.A.'
           onChange={(t) => setRA(t.target.value)}
-          value={ra}
-          variant='outlined'
-        />
+          mask='999.999.999-*'
+          value={ra}>
+          {() => <TextField label='R.A.' variant='outlined' />}
+        </InputMask>
 
         <TextField
           id='nomeMae'
