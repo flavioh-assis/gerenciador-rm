@@ -27,6 +27,7 @@ app.on('ready', async () => {
     minWidth: 1160,
     minHeight: 930,
     show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
