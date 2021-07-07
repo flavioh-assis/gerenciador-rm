@@ -11,7 +11,12 @@ export default () => {
   const [ra, setRA] = useState('')
   const [nomeMae, setNomeMae] = useState('')
   const [alunos, setAlunos] = useState([])
-  const values = [`${nomeAluno}`, `${dataNasc}`, `${ra}`, `${nomeMae}`]
+  const values = [
+    `${nomeAluno}`,
+    `${dataNasc.replace(/\D+/g, '')}`,
+    `${ra.replace(/\D+/g, '')}`,
+    `${nomeMae}`,
+  ]
   const columns = [
     {
       align: 'center',
