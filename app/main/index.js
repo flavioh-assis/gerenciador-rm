@@ -1,6 +1,6 @@
 import path from 'path'
 import { app, BrowserWindow, crashReporter, Menu, protocol } from 'electron'
-// require('../api/main')
+require('../api/main')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 

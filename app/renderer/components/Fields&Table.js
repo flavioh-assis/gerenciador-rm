@@ -3,6 +3,7 @@ import { Button, TextField } from '@material-ui/core'
 import { DataGrid } from '@material-ui/data-grid'
 const { dialog } = require('electron').remote
 import InputMask from 'react-input-mask'
+import sendAsync from '../../../app/api/renderer'
 
 export default () => {
   const [nomeAluno, setNomeAluno] = useState('')
@@ -10,7 +11,7 @@ export default () => {
   const [ra, setRA] = useState('')
   const [nomeMae, setNomeMae] = useState('')
   const [alunos, setAlunos] = useState([])
-
+  const values = [`${nomeAluno}`, `${dataNasc}`, `${ra}`, `${nomeMae}`]
   const columns = [
     {
       align: 'center',
@@ -54,6 +55,17 @@ export default () => {
     setDataNasc('')
     setRA('')
     setNomeMae('')
+  }
+
+  function insertAluno() {
+    sendAsync('INSERT', values).then((res) => {
+      if (res.includes('ERROR')) {
+        showMessage(res, 'Incuir Aluno', 'error')
+      } else {
+        showMessage(res, 'Incuir Aluno', 'info')
+        clearFields()
+      }
+    })
   }
 
   function showMessage(message, title, type) {
@@ -100,10 +112,7 @@ export default () => {
         />
       </div>
       <div className='buttons'>
-        <Button
-          className='button'
-          id='incluir'
-          onClick={() => showMessage('Incluir', 'OK', 'info')}>
+        <Button className='button' id='incluir' onClick={insertAluno}>
           Incluir Aluno
         </Button>
 
