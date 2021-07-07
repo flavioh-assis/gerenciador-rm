@@ -49,19 +49,19 @@ export default () => {
     },
   ]
 
+  function clearFields() {
+    setNomeAluno('')
+    setDataNasc('')
+    setRA('')
+    setNomeMae('')
+  }
+
   function showMessage(message, title, type) {
     dialog.showMessageBox({
       message,
       title,
       type,
     })
-  }
-
-  function clearFields() {
-    setNomeAluno('')
-    setDataNasc('')
-    setRA('')
-    setNomeMae('')
   }
 
   return (
