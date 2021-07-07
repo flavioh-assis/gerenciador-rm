@@ -21,14 +21,14 @@ export default () => {
     },
     {
       align: 'center',
-      field: 'aluno',
+      field: 'nomeAluno',
       flex: 1,
       headerName: 'Nome do Aluno',
       headerAlign: 'center',
     },
     {
       align: 'center',
-      field: 'data_nasc',
+      field: 'dataNasc',
       headerName: 'Data Nasc.',
       width: 140,
       headerAlign: 'center',
@@ -42,7 +42,7 @@ export default () => {
     },
     {
       align: 'center',
-      field: 'mae',
+      field: 'nomeMae',
       flex: 1,
       headerName: 'Nome da Mãe',
       headerAlign: 'center',
@@ -55,6 +55,13 @@ export default () => {
       title,
       type,
     })
+  }
+
+  function clearFields() {
+    setNomeAluno('')
+    setDataNasc('')
+    setRA('')
+    setNomeMae('')
   }
 
   return (
@@ -107,10 +114,7 @@ export default () => {
           Pesquisar Aluno
         </Button>
 
-        <Button
-          className='button'
-          id='limpar'
-          onClick={() => showMessage('Limpar', 'OK', 'info')}>
+        <Button className='button' id='limpar' onClick={clearFields}>
           Limpar Campos
         </Button>
       </div>
