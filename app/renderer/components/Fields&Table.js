@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Button, TextField } from '@material-ui/core'
 import { DataGrid } from '@material-ui/data-grid'
-const { dialog } = require('electron').remote
 import InputMask from 'react-input-mask'
 import sendAsync from '../../../app/api/renderer'
+const { dialog } = require('electron').remote
 
 export default () => {
   const [nomeAluno, setNomeAluno] = useState('')
@@ -11,12 +11,10 @@ export default () => {
   const [ra, setRA] = useState('')
   const [nomeMae, setNomeMae] = useState('')
   const [alunos, setAlunos] = useState([])
-  const values = [
-    `${nomeAluno}`,
-    `${dataNasc.replace(/\D+/g, '')}`,
-    `${ra.replace(/\D+/g, '')}`,
-    `${nomeMae}`,
-  ]
+  const msgError = {
+    insert:
+      'Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenhidos.',
+  }
   const columns = [
     {
       align: 'center',
@@ -63,12 +61,44 @@ export default () => {
   }
 
   function insertAluno() {
-    sendAsync('INSERT', values).then((res) => {
-      if (res.includes('ERROR')) {
-        showMessage(res, 'Incuir Aluno', 'error')
+    if (''.includes(nomeAluno, dataNasc, ra)) {
+      showMessage(msgError.insert, 'Erro ao Incluir Aluno', 'error')
+    } else {
+      let newRA = treatRaValue()
+
+      const values = [
+        `${nomeAluno}`,
+        `${dataNasc.replace(/\D+/g, '')}`,
+        `${newRA}`,
+        `${nomeMae}`,
+      ]
+
+      sendAsync('INSERT', values).then((res) => {
+        if (res.includes('ERROR')) {
+          showMessage(res, 'Incuir Aluno', 'error')
+        } else {
+          showMessage(res, 'Incuir Aluno', 'info')
+          clearFields()
+        }
+      })
+    }
+  }
+
+  function searchAluno() {
+    let newRA = treatRaValue()
+
+    const values = [
+      `${nomeAluno}%`,
+      `${dataNasc.replace(/\D+/g, '')}%`,
+      `${newRA}`,
+      `${nomeMae}%`,
+    ]
+
+    sendAsync('SELECT', values).then((resp) => {
+      if (resp.includes('ERROR')) {
+        showMessage(resp, 'Pesquisar Aluno', 'error')
       } else {
-        showMessage(res, 'Incuir Aluno', 'info')
-        clearFields()
+        setAlunos(resp)
       }
     })
   }
@@ -79,6 +109,25 @@ export default () => {
       title,
       type,
     })
+  }
+
+  function treatRaValue() {
+    let raUnmasked = ra.replace(/\D+/g, '')
+    let dif = 10 - raUnmasked.length
+
+    let newRA = ''
+
+    if (dif == 10) {
+      newRA = '%'
+    } else if (dif == 0) {
+      newRA = raUnmasked
+    } else {
+      for (let count = 0; count < dif; count++) {
+        newRA += '0'
+      }
+      return (newRA += raUnmasked)
+    }
+    return newRA
   }
 
   return (
@@ -116,15 +165,13 @@ export default () => {
           variant='outlined'
         />
       </div>
+
       <div className='buttons'>
         <Button className='button' id='incluir' onClick={insertAluno}>
           Incluir Aluno
         </Button>
 
-        <Button
-          className='button'
-          id='pesquisar'
-          onClick={() => showMessage('Pesquisar', 'OK', 'info')}>
+        <Button className='button' id='pesquisar' onClick={searchAluno}>
           Pesquisar Aluno
         </Button>
 

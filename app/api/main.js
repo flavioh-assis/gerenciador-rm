@@ -16,7 +16,6 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       VALUES(?, ?, ?, ?)`
 
       database.run(sql, values, (err) => {
-        console.log('INSERT')
         event.reply('asynchronous-reply', (err && err.message) || inserted)
       })
       break
@@ -25,13 +24,12 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       sql = `SELECT *
       FROM alunos
       WHERE nomeAluno LIKE ?
-      AND dataNasc = ?
-      AND ra = ?
+      AND dataNasc LIKE ?
+      AND ra LIKE ?
       AND nomeMae LIKE ?
       ORDER BY id`
 
-      database.get(sql, values, (err, rows) => {
-        console.log('SELECT')
+      database.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)
       })
       break
