@@ -5,6 +5,15 @@ const database = new sqlite.Database('./app/api/database/rm.sqlite3', (err) => {
   if (err) console.error('Database opening error: ', err)
 })
 
+database.run(
+  `CREATE TABLE IF NOT EXISTS "alunos" (
+	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"nomeAluno"	TEXT,
+	"dataNasc"	TEXT,
+	"ra"	TEXT,
+	"nomeMae"	TEXT
+);`)
+
 ipcMain.on('asynchronous-message', (event, option, values) => {
   const inserted = 'Aluno inserido com sucesso.'
   let sql = ''
