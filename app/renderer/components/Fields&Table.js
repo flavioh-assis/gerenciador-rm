@@ -6,10 +6,10 @@ import sendAsync from '../../../app/api/renderer'
 const { dialog } = require('electron').remote
 
 export default () => {
-  const [nomeAluno, setNomeAluno] = useState('')
-  const [dataNasc, setDataNasc] = useState('')
-  const [ra, setRA] = useState('')
-  const [nomeMae, setNomeMae] = useState('')
+  const [nomeAluno, setNomeAluno] = useState('flávò')
+  const [dataNasc, setDataNasc] = useState('1')
+  const [ra, setRA] = useState('1')
+  const [nomeMae, setNomeMae] = useState('BẼTÊ')
   const [alunos, setAlunos] = useState([])
   const msgError = {
     insert:
@@ -83,16 +83,18 @@ export default () => {
   }
 
   function insertAluno() {
-    if (''.includes(nomeAluno, dataNasc, ra)) {
+    if ([nomeAluno, dataNasc, ra].includes('')) {
       showMessage(msgError.insert, 'Erro ao Incluir Aluno', 'error')
     } else {
       let newRA = treatRaValue()
 
       const values = [
         `${nomeAluno}`,
+        `${normalize(nomeAluno)}`,
         `${dataNasc.replace(/\D+/g, '')}`,
         `${newRA}`,
         `${nomeMae}`,
+        `${normalize(nomeMae)}`,
       ]
 
       sendAsync('INSERT', values).then((res) => {
@@ -106,16 +108,20 @@ export default () => {
     }
   }
 
+  function normalize(text) {
+    return text.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  }
+
   function searchAluno() {
     let newRA = treatRaValue()
 
     const values = [
-      `${nomeAluno}%`,
+      `${normalize(nomeAluno)}%`,
       `${dataNasc.replace(/\D+/g, '')}%`,
       `${newRA}`,
-      `${nomeMae}%`,
+      `${normalize(nomeMae)}%`,
     ]
-
+    
     sendAsync('SELECT', values).then((resp) => {
       if (resp.includes('ERROR')) {
         showMessage(resp, 'Pesquisar Aluno', 'error')
