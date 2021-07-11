@@ -22,6 +22,7 @@ export default () => {
       headerName: 'RM',
       width: 80,
       headerAlign: 'center',
+      sortable: false,
     },
     {
       align: 'center',
@@ -32,17 +33,38 @@ export default () => {
     },
     {
       align: 'center',
-      field: 'dataNasc',
+      field: 'dataMasked',
       headerName: 'Data Nasc.',
       width: 140,
       headerAlign: 'center',
+      sortable: false,
+      valueGetter: (params) => {
+        let dateUnmasked = params.getValue('dataNasc')
+
+        let day = dateUnmasked.substr(0, 2)
+        let month = dateUnmasked.substr(2, 2)
+        let year = dateUnmasked.substr(4, 4)
+
+        return `${day}/${month}/${year}`
+      },
     },
     {
       align: 'center',
-      field: 'ra',
+      field: 'raMasked',
       headerName: 'R.A.',
       width: 180,
       headerAlign: 'center',
+      sortable: false,
+      valueGetter: (params) => {
+        let raUnmasked = params.getValue('ra')
+
+        let raMasked = raUnmasked.substr(0, 3) + '.'
+        raMasked += raUnmasked.substr(3, 3) + '.'
+        raMasked += raUnmasked.substr(6, 3) + '-'
+        raMasked += raUnmasked.substr(9, 1)
+
+        return raMasked
+      },
     },
     {
       align: 'center',
@@ -185,6 +207,7 @@ export default () => {
           autoHeight
           columns={columns}
           disableColumnMenu={true}
+          disableSelectionOnClick
           pageSize={10}
           rows={alunos}
           rowHeight={45}
