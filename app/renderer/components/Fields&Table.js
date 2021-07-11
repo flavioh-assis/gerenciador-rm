@@ -136,6 +136,7 @@ export default () => {
       message,
       title,
       type,
+      buttons: ['OK']
     })
   }
 
