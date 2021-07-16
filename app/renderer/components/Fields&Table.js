@@ -248,13 +248,12 @@ precisam ser preenhidos.`,
   }
 
   function showMessage(message, title, type) {
-      dialog.showMessageBox({
-        message,
-        title,
-        type,
-        buttons: ['OK'],
-      })
-    }
+    dialog.showMessageBox({
+      message,
+      title,
+      type,
+      buttons: ['OK'],
+    })
   }
 
   function treatRaValue(value) {
