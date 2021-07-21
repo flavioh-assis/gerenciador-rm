@@ -255,7 +255,7 @@ precisam ser preenhidos.`,
         buttons: ['OK'],
       })
     }
-  }
+  
 
   function treatRaValue(value) {
     let raUnmasked = String(value).replace(/[\W_]/g, '').toUpperCase()
