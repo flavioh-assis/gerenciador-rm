@@ -45,13 +45,8 @@ Toggle DevTools:
 
 ## Packaging
 
-Modify [electron-builder.yml](./electron-builder.yml) to edit package info.
+After several hours spent trying to get the packaging work using [electron-builder](https://www.electron.build), [electron-packager](https://github.com/electron/electron-packager) and [electron-forge](https://www.electronforge.io/), I was not able to make the proper distribution.
 
-For a full list of options see: https://www.electron.build/configuration/configuration
+I will let the project in standby for now. I'm gonna study some mobile and maybe I'll back to work in this Electron project.
 
-Create a package Linux or Windows using one of the following commands:
-
-```
-yarn run pack:linux
-yarn run pack:win
-```
+Thanks
