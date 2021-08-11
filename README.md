@@ -47,6 +47,6 @@ Toggle DevTools:
 
 After several hours spent trying to get the packaging work using [electron-builder](https://www.electron.build), [electron-packager](https://github.com/electron/electron-packager) and [electron-forge](https://www.electronforge.io/), I was not able to make the proper distribution.
 
-I will let the project in standby for now. I'm gonna study some mobile and maybe I'll back to work in this Electron project.
+I will let the project in standby for now. I'm gonna study something else and maybe I'll back to work in this project.
 
 Thanks
