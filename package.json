@@ -11,6 +11,7 @@
   "dependencies": {
     "@material-ui/core": "^4.11.3",
     "@material-ui/data-grid": "^4.0.0-alpha.24",
+    "electron-squirrel-startup": "^1.0.0",
     "nedb": "^1.8.0",
     "prop-types": "^15.7.2",
     "react": "^16.13.1",
@@ -18,8 +19,6 @@
     "react-input-mask": "^2.0.4",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.2.0",
-    "read-excel-file": "^5.2.7",
-    "sqlite3": "^5.0.2",
     "string-mask": "^0.3.0"
   },
   "devDependencies": {
@@ -28,14 +27,17 @@
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-react": "^7.9.4",
+    "@electron-forge/cli": "^6.0.0-beta.61",
+    "@electron-forge/maker-deb": "^6.0.0-beta.61",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.61",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.61",
+    "@electron-forge/maker-zip": "^6.0.0-beta.61",
     "babel-eslint": "^10.1.0",
     "browser-sync": "^2.26.7",
     "chai": "^4.1.0",
     "electron": "^8.2.2",
-    "electron-builder": "^22.4.1",
     "electron-devtools-installer": "^3.0.0",
     "electron-mocha": "^8.2.1",
-    "electron-packager": "^15.4.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-inject-string": "^1.1.2",
@@ -44,7 +46,27 @@
   },
   "scripts": {
     "dev": "gulp develop",
-    "dist:lin": "electron-packager ./ --platform: linux --arch: x86_64 --asar",
-    "dist:win": "electron-packager ./ --platform: win32 --arch: x86_64 --asar"
+    "dist:lin": "electron-packager ./ --platform: linux --arch: x86_64 --asar --overwrite",
+    "dist:win": "electron-packager ./ --platform: win32 --arch: x86_64 --asar --overwrite",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "rm_manager"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        }
+      ]
+    }
   }
 }

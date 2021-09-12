@@ -2,7 +2,7 @@ import path from 'path'
 const { ipcMain } = require('electron')
 
 const rootPath = process.cwd()
-const fileName = '/database-rm'
+const fileName = '/database_ger_rm'
 const pathToFile = path.resolve(path.join(rootPath, '/Banco de Dados', fileName))
 
 const Datastore = require('nedb'),

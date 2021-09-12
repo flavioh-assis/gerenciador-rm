@@ -5,7 +5,6 @@ import InputMask from 'react-input-mask'
 import sendAsync from '../../../app/api/renderer'
 import StringMask from 'string-mask'
 const { dialog } = require('electron').remote
-const readXlsxFile = require('read-excel-file/node')
 
 export default () => {
   const [nomeAluno, setNomeAluno] = useState('')
