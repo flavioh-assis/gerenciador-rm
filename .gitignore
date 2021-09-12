@@ -11,6 +11,9 @@ yarn-error.log*
 node_modules/
 dist/
 dist-assets/
+out/
+
+Banco de Dados/
 
 .DS_Store
 .env
