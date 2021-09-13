@@ -7,10 +7,18 @@ import StringMask from 'string-mask'
 const { dialog } = require('electron').remote
 
 export default () => {
-  const [nomeAluno, setNomeAluno] = useState('')
-  const [dataNasc, setDataNasc] = useState('01/01/2000')
-  const [ra, setRA] = useState('')
-  const [nomeMae, setNomeMae] = useState('')
+  const initialDados = {
+    nomeAluno: '',
+    dataNasc: '',
+    ra: '',
+    nomeMae: '',
+  }
+  const [dados, setDados] = useState({
+    nomeAluno: '',
+    dataNasc: '',
+    ra: '',
+    nomeMae: '',
+  })
   const [alunos, setAlunos] = useState([
     // {
     //   id: 1,
@@ -82,15 +90,15 @@ precisam ser preenhidos.`,
     // inuteis
     {
       field: 'id',
-      hide: true
+      hide: true,
     },
     {
       field: 'dataNasc',
-      hide: true
+      hide: true,
     },
     {
       field: 'ra',
-      hide: true
+      hide: true,
     },
   ]
 
@@ -124,10 +132,7 @@ precisam ser preenhidos.`,
   }
 
   function clearFields() {
-    setNomeAluno('')
-    setDataNasc('')
-    setRA('')
-    setNomeMae('')
+    setDados(initialDados)
   }
 
   function createRegExpDate() {
@@ -137,7 +142,7 @@ precisam ser preenhidos.`,
   }
 
   function insertAluno() {
-    let dataClean = dataNasc.replace(/\D+/g, '')
+    let dataClean = String(dados.dataNasc).replace(/\D+/g, '')
 
     let regex = createRegExpDate()
 
@@ -163,9 +168,9 @@ precisam ser preenhidos.`,
     //       showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
     //     }
     //   } else {
-    let newRA = treatRaValue(ra)
-    let nomeAlunoCap = capitalize(nomeAluno)
-    let nomeMaeCap = capitalize(nomeMae)
+    let newRA = treatRaValue(dados.ra)
+    let nomeAlunoCap = capitalize(dados.nomeAluno)
+    let nomeMaeCap = capitalize(dados.nomeMae)
 
     // const values = [
     //   `${}`,
@@ -185,10 +190,9 @@ precisam ser preenhidos.`,
       nomeMaeNorm: normalize(nomeMaeCap),
     }
 
-    let msgParts = []
-    msgParts.push('Confira os dados abaixo:\n')
+    let msgParts = ['Confira os dados abaixo:\n']
     msgParts.push(nomeAlunoCap)
-    msgParts.push(dataNasc)
+    msgParts.push(dados.dataNasc)
     msgParts.push(StringMask.apply(newRA, '000.000.000-A'))
     msgParts.push(nomeMaeCap || 'MÃE NÃO INFORMADA')
     msgParts.push('\nOs dados estão corretos?')
@@ -253,22 +257,23 @@ precisam ser preenhidos.`,
     return String(text)
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
   }
 
   function searchAluno() {
     let newRA = treatRaValue(ra)
 
     const values = [
-      `${normalize(nomeAluno)}`,
-      `${dataNasc.replace(/\D+/g, '')}`,
+      `${normalize(dados.nomeAluno)}`,
+      `${String(dados.dataNasc).replace(/\D+/g, '')}`,
       `${newRA}`,
-      `${normalize(nomeMae)}`,
+      `${normalize(dados.nomeMae)}`,
     ]
 
     // alert(JSON.stringify(values, null, 1))
 
     // const values = {
-    //   nomeAlunoNormalized: `${normalize(nomeAluno)}`,
+    //   nomeAlunoNormalized: `${normalize(dados.nomeAluno)}`,
     //   dataNasc: `${dataNasc.replace(/\D+/g, '')}`,
     //   ra: `${newRA}`,
     //   nomeMaeNormalized: `${normalize(nomeMae)}`,
@@ -313,25 +318,25 @@ precisam ser preenhidos.`,
         <TextField
           id='nomeAluno'
           label='Nome do Aluno'
-          onChange={(t) => setNomeAluno(t.target.value)}
-          value={nomeAluno}
+          onChange={(t) => setDados({ ...dados, nomeAluno: t.target.value })}
+          value={dados.nomeAluno}
           variant='outlined'
         />
 
         <InputMask
           id='dataNasc'
-          onChange={(t) => setDataNasc(t.target.value)}
+          onChange={(t) => setDados({ ...dados, dataNasc: t.target.value })}
           mask='99/99/9999'
-          value={dataNasc}
+          value={dados.dataNasc}
         >
           {() => <TextField label='Data de Nascimento' variant='outlined' />}
         </InputMask>
 
         <InputMask
           id='ra'
-          onChange={(t) => setRA(t.target.value)}
+          onChange={(t) => setDados({ ...dados, ra: t.target.value })}
           mask='999.999.999-*'
-          value={ra}
+          value={dados.ra}
         >
           {() => <TextField label='R.A.' variant='outlined' />}
         </InputMask>
@@ -339,8 +344,8 @@ precisam ser preenhidos.`,
         <TextField
           id='nomeMae'
           label='Nome da Mãe'
-          onChange={(t) => setNomeMae(t.target.value)}
-          value={nomeMae}
+          onChange={(t) => setDados({ ...dados, nomeMae: t.target.value })}
+          value={dados.nomeMae}
           variant='outlined'
         />
       </div>
