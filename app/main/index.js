@@ -25,7 +25,7 @@ app.on('window-all-closed', () => {
 app.on('ready', async () => {
   mainWindow = new BrowserWindow({
     minWidth: 1160,
-    minHeight: 950,
+    minHeight: 780,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
