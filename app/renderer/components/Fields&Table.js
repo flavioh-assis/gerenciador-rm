@@ -184,7 +184,6 @@ precisam ser preenhidos.`,
       nomeMae: nomeMaeCap,
       nomeMaeNorm: normalize(nomeMaeCap),
     }
-    alert(JSON.stringify(values, null, 1))
 
     let msgParts = []
     msgParts.push('Confira os dados abaixo:\n')
@@ -219,8 +218,6 @@ precisam ser preenhidos.`,
           })
         }
       })
-    //   }//else
-    // }//else
   }
 
   // insert data from a .xslx file
@@ -281,7 +278,7 @@ precisam ser preenhidos.`,
       if (resp.includes('ERROR')) {
         showMessage(resp, 'Pesquisar Aluno', 'error')
       } else {
-        alert(JSON.stringify(resp, null, 1))
+        showMessage(JSON.stringify(resp, null, 1), 'searchAluno', 'info')
         setAlunos(resp)
       }
     })
@@ -368,7 +365,7 @@ precisam ser preenhidos.`,
           columns={columns}
           disableColumnMenu={true}
           disableSelectionOnClick
-          pageSize={10}
+          pageSize={5}
           rows={alunos}
           rowHeight={45}
         />
