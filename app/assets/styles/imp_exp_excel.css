@@ -1,0 +1,45 @@
+.impExpExcel {
+  align-items: center;
+  background: #185c37;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  display: flex;
+  flex-direction: column;
+  height: 20rem;
+  width: 30rem;
+}
+.impExpExcel #title {
+  color: #fff;
+  font: 500 1.5rem Archivo;
+  margin-top: 2rem;
+}
+.impExpExcel p {
+  color: #185c37;
+  font: 500 1.2rem Archivo;
+}
+#buttons {
+  display: flex;
+  margin: auto;
+}
+.impExpExcel button {
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font: 500 1.1rem Archivo;
+  height: 11.5rem;
+  margin: 1rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  width: 11rem;
+}
+.impExpExcel button:hover {
+  box-shadow: 4px 4px 3px #33c481;
+  transition: box-shadow 0.2s ease-in-out;
+}
+.label {
+  cursor: pointer;
+}
+input {
+  margin-bottom: 1rem;
+}

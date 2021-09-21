@@ -261,13 +261,13 @@ precisam ser preenhidos.`,
   }
 
   function searchAluno() {
-    let newRA = treatRaValue(ra)
+    let newRA = treatRaValue(dados.ra)
 
     const values = [
-      `${normalize(dados.nomeAluno)}`,
-      `${String(dados.dataNasc).replace(/\D+/g, '')}`,
-      `${newRA}`,
-      `${normalize(dados.nomeMae)}`,
+      `${normalize(dados.nomeAluno)}%`,
+      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
+      `${newRA}%`,
+      `${normalize(dados.nomeMae)}%`,
     ]
 
     // alert(JSON.stringify(values, null, 1))
@@ -284,6 +284,7 @@ precisam ser preenhidos.`,
         showMessage(resp, 'Pesquisar Aluno', 'error')
       } else {
         showMessage(JSON.stringify(resp, null, 1), 'searchAluno', 'info')
+        // showMessage(JSON.stringify(resp[0]['values'][0][0], null, 1), 'searchAluno', 'info')
         setAlunos(resp)
       }
     })
@@ -301,11 +302,12 @@ precisam ser preenhidos.`,
   function treatRaValue(value) {
     let raUnmasked = String(value).replace(/[\W_]/g, '').toUpperCase()
 
-    if (raUnmasked.length == 0) {
-      return '%'
-    } else {
-      return StringMask.apply(raUnmasked, '000000000A', { reverse: true })
-    }
+    return raUnmasked
+    // if (raUnmasked.length == 0) {
+    //   return '%'
+    // } else {
+    //   return StringMask.apply(raUnmasked, '000000000A', { reverse: true })
+    // }
   }
 
   function validateDateLength(string) {

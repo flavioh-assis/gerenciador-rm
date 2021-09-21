@@ -1,139 +1,75 @@
 import path from 'path'
 const { ipcMain } = require('electron')
+const sqlite = require('sqlite3').verbose()
 
 const rootPath = process.cwd()
-const fileName = '/database_ger_rm'
-const pathToFile = path.resolve(path.join(rootPath, '/Banco de Dados', fileName))
+const fileName = 'db_ger_rm.sqlite3'
+const pathToFile = path.resolve(
+  path.join(rootPath, '/Banco de Dados/', fileName)
+)
 
-const Datastore = require('nedb'),
-  database = new Datastore({
-    filename: pathToFile,
-    autoload: true,
-  })
+const database = new sqlite.Database(pathToFile, (err) => {
+  if (err) console.error('Database opening error: ', err)
+})
 
-ipcMain.on('asynchronous-message', async (event, option, values) => {
+database.run(
+  `CREATE TABLE IF NOT EXISTS "alunos" (
+	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"nomeAluno"	TEXT,
+	"nomeAlunoNorm"	TEXT,
+	"dataNasc"	TEXT,
+	"ra"	TEXT UNIQUE,
+	"nomeMae"	TEXT,
+	"nomeMaeNorm"	TEXT
+  );`
+)
+
+// database.run(
+//   `INSERT INTO alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
+//   VALUES ('John Doe', 'john doe', '01012000', '1', 'Bete', 'bete')`
+// )
+
+ipcMain.on('asynchronous-message', (event, option, values) => {
   const inserted = 'Aluno inserido com sucesso.'
-  const selError = 'Erro ao pesquisar aluno.'
-
-  let search = {}
-
-  // if (typeof values !== 'object') {
-  // search = {
-    // nomeAlunoNorm: `/${values[0]}/`,
-    // nomeAlunoNorm: `^zzz`,
-    // dataNasc: `${values[1]}`,
-    // ra: `${values[2]}`,
-    // nomeMaeNorm: `${values[3]}`,
-  // }
-  // }
+  let sql = ''
 
   switch (option) {
     case 'INSERT':
-      let nextID = 1
+      sql = `INSERT INTO
+      alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
+      VALUES(?, ?, ?, ?, ?, ?)`
 
-      await new Promise((res, rej) => {
-        database.count({}, (err, n) => {
-          nextID += n
-
-          res(nextID)
-        })
+      database.run(sql, values, (err) => {
+        event.reply('asynchronous-reply', (err && err.message) || inserted)
       })
-        .then(() => {
-          let aluno = {
-            id: nextID,
-            nomeAluno: values.nomeAluno,
-            nomeAlunoNorm: values.nomeAlunoNorm,
-            dataNasc: values.dataNasc,
-            ra: values.ra,
-            nomeMae: values.nomeMae,
-            nomeMaeNorm: values.nomeMaeNorm,
-          }
-
-          database.insert(aluno, (err) => {
-            event.reply('asynchronous-reply', (err && err.message) || inserted)
-          })
-        })
-        .catch(() => {
-          event.reply('asynchronous-reply', selError)
-        })
 
       break
 
     case 'INSERT_EXCEL':
-      // sql = `INSERT INTO
-      //   alunos (id, nomeAluno, nomeAlunoNormalized, dataNasc, ra, nomeMae, nomeMaeNormalized)
-      //   VALUES(?, ?, ?, ?, ?, ?, ?)`
+      sql = `INSERT INTO
+        alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
+        VALUES(?, ?, ?, ?, ?, ?, ?)`
 
-      // database.run(sql, values, (err) => {
-      //   event.reply('asynchronous-reply', (err && err.message) || inserted)
-      // })
+      database.run(sql, values, (err) => {
+        event.reply('asynchronous-reply', (err && err.message) || inserted)
+      })
 
       break
 
     case 'SELECT':
-      // let name = '|z'
-      // let data = '01012000'
-      // let ra = '1'
+      // sql = `SELECT * FROM alunos`
 
-      // let regex = new RegExp(name, 'i')
+      sql = `SELECT *
+      FROM alunos
+      WHERE nomeAlunoNorm LIKE ?
+      AND dataNasc LIKE ?
+      AND ra LIKE ?
+      AND nomeMaeNorm LIKE ?
+      ORDER BY id`
 
-      // let query = {
-      //   $or: [
-      //     {
-      //       nomeAlunoNorm: {
-      //         $regex: regex
-      //       }
-      //     }
-      //   ]
-      // }
-
-      database
-        .find({})
-        .sort({ id: 1 })
-        .exec((err, rows) => {
-          event.reply(
-            'asynchronous-reply',
-            (err && err.message) || rows
-          )
-        })
+      database.all(sql, values, (err, rows) => {
+        event.reply('asynchronous-reply', (err && err.message) || rows)
+      })
       break
   }
-
-  // switch (option) {
-  //   case 'INSERT':
-  //     sql = `INSERT INTO
-  //     alunos (nomeAluno, nomeAlunoNormalized, dataNasc, ra, nomeMae, nomeMaeNormalized)
-  //     VALUES(?, ?, ?, ?, ?, ?)`
-
-  //     database.run(sql, values, (err) => {
-  //       event.reply('asynchronous-reply', (err && err.message) || inserted)
-  //     })
-
-  //     break
-
-  //     case 'INSERT_EXCEL':
-  //       sql = `INSERT INTO
-  //       alunos (id, nomeAluno, nomeAlunoNormalized, dataNasc, ra, nomeMae, nomeMaeNormalized)
-  //       VALUES(?, ?, ?, ?, ?, ?, ?)`
-
-  //       database.run(sql, values, (err) => {
-  //         event.reply('asynchronous-reply', (err && err.message) || inserted)
-  //       })
-
-  //       break
-
-  //   case 'SELECT':
-  //     sql = `SELECT *
-  //     FROM alunos
-  //     WHERE nomeAlunoNormalized LIKE ?
-  //     AND dataNasc LIKE ?
-  //     AND ra LIKE ?
-  //     AND nomeMaeNormalized LIKE ?
-  //     ORDER BY id`
-
-  //     database.all(sql, values, (err, rows) => {
-  //       event.reply('asynchronous-reply', (err && err.message) || rows)
-  //     })
-  //     break
-  // }
 })
