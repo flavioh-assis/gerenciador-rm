@@ -1,18 +1,17 @@
 import path from 'path'
 import fs from 'fs'
-const { ipcMain } = require('electron')
+import { ipcMain } from 'electron'
 const sqlite = require('sqlite3').verbose()
 
-const rootPath = process.cwd()
-// const rootPath = __dirname
-const dbDirPath = path.resolve(path.join(rootPath, '../../app/api', '/database/'))
+const dbDirRelPath = '../../app/api/database/'
+const dbDirFinalPath = path.resolve(path.join(__dirname, dbDirRelPath))
 const fileName = 'db_ger_rm.sqlite3'
 
-if (!fs.existsSync(dbDirPath)) {
-  fs.mkdirSync(dbDirPath)
+if (!fs.existsSync(dbDirFinalPath)) {
+  fs.mkdirSync(dbDirFinalPath)
 }
 const pathToFile = path.resolve(
-  path.join(dbDirPath, fileName)
+  path.join(dbDirFinalPath, fileName)
 )
 
 const database = new sqlite.Database(pathToFile, (err) => {
@@ -59,8 +58,6 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'SELECT':
-      // sql = `SELECT * FROM alunos`
-
       sql = `SELECT *
       FROM alunos
       WHERE nomeAlunoNorm LIKE ?
