@@ -172,24 +172,15 @@ precisam ser preenhidos.`,
     let nomeAlunoCap = capitalize(dados.nomeAluno)
     let nomeMaeCap = capitalize(dados.nomeMae)
 
-    // const values = [
-    //   `${}`,
-    //   `${normalize(nomeAlunoCap)}`,
-    //   `${dataClean}`,
-    //   `${newRA}`,
-    //   `${nomeMaeCap}`,
-    //   `${normalize(nomeMaeCap)}`,
-    // ]
-    let values = {
-      id: null,
-      nomeAluno: nomeAlunoCap,
-      nomeAlunoNorm: normalize(nomeAlunoCap),
-      dataNasc: dataClean,
-      ra: newRA,
-      nomeMae: nomeMaeCap,
-      nomeMaeNorm: normalize(nomeMaeCap),
-    }
-
+    const values = [
+      nomeAlunoCap,
+      normalize(nomeAlunoCap),
+      dataClean,
+      newRA,
+      nomeMaeCap,
+      normalize(nomeMaeCap),
+    ]
+    
     let msgParts = ['Confira os dados abaixo:\n']
     msgParts.push(nomeAlunoCap)
     msgParts.push(dados.dataNasc)

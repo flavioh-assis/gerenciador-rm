@@ -1,11 +1,18 @@
 import path from 'path'
+import fs from 'fs'
 const { ipcMain } = require('electron')
 const sqlite = require('sqlite3').verbose()
 
 const rootPath = process.cwd()
+// const rootPath = __dirname
+const dbDirPath = path.resolve(path.join(rootPath, '../../app/api', '/database/'))
 const fileName = 'db_ger_rm.sqlite3'
+
+if (!fs.existsSync(dbDirPath)) {
+  fs.mkdirSync(dbDirPath)
+}
 const pathToFile = path.resolve(
-  path.join(rootPath, '/Banco de Dados/', fileName)
+  path.join(dbDirPath, fileName)
 )
 
 const database = new sqlite.Database(pathToFile, (err) => {
@@ -23,11 +30,6 @@ database.run(
 	"nomeMaeNorm"	TEXT
   );`
 )
-
-// database.run(
-//   `INSERT INTO alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
-//   VALUES ('John Doe', 'john doe', '01012000', '1', 'Bete', 'bete')`
-// )
 
 ipcMain.on('asynchronous-message', (event, option, values) => {
   const inserted = 'Aluno inserido com sucesso.'

@@ -56,7 +56,7 @@
     "dist:win": "electron-packager ./ --platform: win32 --arch: x86_64 --asar --overwrite",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make -m"
   },
   "config": {
     "forge": {
