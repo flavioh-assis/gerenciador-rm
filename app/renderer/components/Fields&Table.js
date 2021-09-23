@@ -248,6 +248,7 @@ precisam ser preenhidos.`,
     return String(text)
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
+      .replace(/[`´'"]/g, '')
       .toLowerCase()
   }
 
