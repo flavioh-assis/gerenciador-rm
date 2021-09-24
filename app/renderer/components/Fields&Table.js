@@ -6,6 +6,9 @@ import sendAsync from '../../../app/api/renderer'
 import StringMask from 'string-mask'
 const { dialog } = require('electron').remote
 
+// import GPS from 'gps'
+// const gps = new GPS()
+
 export default () => {
   const initialDados = {
     nomeAluno: '',
@@ -180,7 +183,7 @@ precisam ser preenhidos.`,
       nomeMaeCap,
       normalize(nomeMaeCap),
     ]
-    
+
     let msgParts = ['Confira os dados abaixo:\n']
     msgParts.push(nomeAlunoCap)
     msgParts.push(dados.dataNasc)
@@ -262,21 +265,13 @@ precisam ser preenhidos.`,
       `${normalize(dados.nomeMae)}%`,
     ]
 
-    // alert(JSON.stringify(values, null, 1))
-
-    // const values = {
-    //   nomeAlunoNormalized: `${normalize(dados.nomeAluno)}`,
-    //   dataNasc: `${dataNasc.replace(/\D+/g, '')}`,
-    //   ra: `${newRA}`,
-    //   nomeMaeNormalized: `${normalize(nomeMae)}`,
-    // }
-
     sendAsync('SELECT', values).then((resp) => {
       if (resp.includes('ERROR')) {
         showMessage(resp, 'Pesquisar Aluno', 'error')
       } else {
-        showMessage(JSON.stringify(resp, null, 1), 'searchAluno', 'info')
-        // showMessage(JSON.stringify(resp[0]['values'][0][0], null, 1), 'searchAluno', 'info')
+        if (resp.length === 0) {
+          showMessage('Nenhum aluno encontrado!', 'Pesquisar Aluno', 'info')
+        }
         setAlunos(resp)
       }
     })
