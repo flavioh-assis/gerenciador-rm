@@ -6,9 +6,6 @@ import sendAsync from '../../../app/api/renderer'
 import StringMask from 'string-mask'
 const { dialog } = require('electron').remote
 
-// import GPS from 'gps'
-// const gps = new GPS()
-
 export default () => {
   const initialDados = {
     nomeAluno: '',
@@ -24,7 +21,7 @@ export default () => {
   })
   const [alunos, setAlunos] = useState([
     // {
-    //   id: 1,
+    //   id: 80000,
     //   nomeAluno: 'Flavio',
     //   dataNasc: '01012000',
     //   ra: '1',
@@ -51,7 +48,7 @@ precisam ser preenhidos.`,
       sortable: false,
       valueGetter: (params) => {
         let rm = String(params.getValue('id'))
-        return StringMask.apply(rm, '###.##0', { reverse: true })
+        return applyMask(rm, 'rm')
       },
     },
     {
@@ -69,7 +66,7 @@ precisam ser preenhidos.`,
       sortable: false,
       valueGetter: (params) => {
         let date = String(params.getValue('dataNasc'))
-        return StringMask.apply(date, '00/00/0000')
+        return applyMask(date, 'data')
       },
     },
     {
@@ -81,7 +78,7 @@ precisam ser preenhidos.`,
       sortable: false,
       valueGetter: (params) => {
         let ra = String(params.getValue('ra'))
-        return StringMask.apply(ra, '000.000.000-A')
+        return applyMask(ra, 'ra')
       },
     },
     {
@@ -105,6 +102,125 @@ precisam ser preenhidos.`,
     },
   ]
 
+  //---------------------- HANDLERS --------------------------
+  function incluirAlunoHandler() {
+    const dataClean = treatDataNasc(dados.dataNasc) 
+
+    if (
+      [dados.nomeAluno, treatDataNasc(dados.dataNasc), dados.ra].includes('')
+    ) {
+      showMessage(msgError.emptyFields, 'Erro ao Incluir Aluno', 'error')
+    } else if (!validateDateLength(dataClean)) {
+      showMessage(msgError.wrongDate, 'Erro ao Incluir Aluno', 'error')
+    } else {
+      const dataSliced = sliceDate(treatDataNasc(dados.dataNasc))
+      const currentYear = new Date().getFullYear()
+
+      if (dataSliced.year < 2000 || dataSliced.year > currentYear - 5) {
+        let errorMsg = `${msgError.wrongYear} ${msgError.correction}`
+        showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
+
+      } else if (!validateDate(dados.dataNasc)) {
+        if (dataSliced.month < 1 || dataSliced.month > 12) {
+          let errorMsg = `${msgError.wrongMonth} ${msgError.correction}`
+          showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
+        } else {
+          let errorMsg = `${msgError.wrongDay} ${msgError.correction}`
+          showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
+        }
+      } else {
+        const values = createValuesArray()
+
+        const msg = createQuestionMessage(values)
+
+        showMessage(msg, 'Incluir Aluno(a)', 'question', values)
+      }
+    }
+  }
+
+  function sliceDate(date) {
+    return {
+      month: parseInt(date.substr(2, 2), 10),
+      year: parseInt(date.substr(4, 4), 10),
+    }
+  }
+
+  function postAlunoExcel() {
+    let dictPath = process.cwd()
+    let fileName = 'RM_2020_base.xlsx'
+    let filePath = `${dictPath}/${fileName}`
+
+    readXlsxFile(filePath).then((rows) => {
+      rows.forEach((row, index) => {
+        let norm = normalize(row)
+        let newRa = parseInt(index + 1, 10)
+
+        const values = [
+          `${newRa}`,
+          `${row}`,
+          norm,
+          '00000000',
+          `${treatRa(newRa)}`,
+          '',
+          '',
+        ]
+        sendAsync('INSERT_EXCEL', values).then((res) => {
+          if (res.includes('ERROR')) {
+            showMessage(res, 'Incuir Aluno', 'error')
+          }
+        })
+      })
+    })
+  }
+
+  function searchAluno() {
+    let raValue = treatRa(dados.ra)
+
+    const values = [
+      `${normalize(dados.nomeAluno)}%`,
+      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
+      `${raValue}%`,
+      `${normalize(dados.nomeMae)}%`,
+    ]
+
+    sendAsync('SELECT', values).then((resp) => {
+      if (resp.includes('ERROR')) {
+        showMessage(resp, 'Pesquisar Aluno', 'error')
+      } else {
+        if (resp.length === 0) {
+          showMessage('Nenhum aluno encontrado!', 'Pesquisar Aluno', 'info')
+        }
+        setAlunos(resp)
+      }
+    })
+  }
+
+  function clearFieldsHandler() {
+    setDados(initialDados)
+  }
+
+  //---------------------- CREATORS --------------------------
+  function createValuesArray() {
+    return [
+      capitalize(dados.nomeAluno),
+      normalize(dados.nomeAluno),
+      treatDataNasc(dados.dataNasc),
+      treatRa(dados.ra),
+      capitalize(dados.nomeMae),
+      normalize(dados.nomeMae),
+    ]
+  }
+
+  function createQuestionMessage(values) {
+    return `Confira os dados abaixo:
+    Aluno: ${values[0]}
+    Nasc.:  ${applyMask(values[2], 'data')}
+    RA.:      ${applyMask(values[3], 'ra')}
+    Mãe:    ${values[4] || 'NÃO INFORMADA'}\n
+    Os dados estão corretos?`
+  }
+
+  //---------------------- TRANSFORMERS --------------------------
   function capitalize(text) {
     //split the given string into an array of strings
     //whenever a blank space is encountered
@@ -134,117 +250,17 @@ precisam ser preenhidos.`,
     return textCapitalized.join(' ')
   }
 
-  function clearFields() {
-    setDados(initialDados)
-  }
+  function applyMask(value, type) {
+    switch (type) {
+      case 'data':
+        return StringMask.apply(value, '00/00/0000')
 
-  function createRegExpDate() {
-    return new RegExp(
-      /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/g
-    )
-  }
+      case 'ra':
+        return StringMask.apply(value, '000.000.000-A')
 
-  function insertAluno() {
-    let dataClean = String(dados.dataNasc).replace(/\D+/g, '')
-
-    let regex = createRegExpDate()
-
-    // if ([nomeAluno, dataClean, ra].includes('')) {
-    //   showMessage(msgError.emptyFields, 'Erro ao Incluir Aluno', 'error')
-    // } else if (!validateDateLength(dataClean)) {
-    //   showMessage(msgError.wrongDate, 'Erro ao Incluir Aluno', 'error')
-    // } else {
-    //   let year = parseInt(dataClean.substr(4, 4), 10)
-    //   let currentYear = new Date().getFullYear()
-
-    //   if (year < 2000 || year > currentYear - 5) {
-    //     let errorMsg = `${msgError.wrongYear} ${msgError.correction}`
-    //     showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
-    //   } else if (!regex.test(dataNasc)) {
-    //     let month = parseInt(dataClean.substr(2, 2), 10)
-
-    //     if (month < 1 || month > 12) {
-    //       let errorMsg = `${msgError.wrongMonth} ${msgError.correction}`
-    //       showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
-    //     } else {
-    //       let errorMsg = `${msgError.wrongDay} ${msgError.correction}`
-    //       showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
-    //     }
-    //   } else {
-    let newRA = treatRa(dados.ra)
-    let nomeAlunoCap = capitalize(dados.nomeAluno)
-    let nomeMaeCap = capitalize(dados.nomeMae)
-
-    const values = [
-      nomeAlunoCap,
-      normalize(nomeAlunoCap),
-      dataClean,
-      newRA,
-      nomeMaeCap,
-      normalize(nomeMaeCap),
-    ]
-
-    let msgParts = ['Confira os dados abaixo:\n']
-    msgParts.push(nomeAlunoCap)
-    msgParts.push(dados.dataNasc)
-    msgParts.push(StringMask.apply(newRA, '000.000.000-A'))
-    msgParts.push(nomeMaeCap || 'MÃE NÃO INFORMADA')
-    msgParts.push('\nOs dados estão corretos?')
-
-    let msg = msgParts.join('\n')
-
-    dialog
-      .showMessageBox({
-        buttons: ['SIM', 'NÃO'],
-        message: msg,
-        title: 'Deseja incluir o(a) aluno(a)?',
-        type: 'question',
-      })
-      .then((res) => {
-        if (res.response == 0) {
-          // SIM
-          sendAsync('INSERT', values).then((res) => {
-            if (res.includes('UNIQUE')) {
-              let errorMsg = `${msgError.unique} ${msgError.correction}`
-              showMessage(errorMsg, 'Incuir Aluno', 'error')
-            } else if (res.includes('ERROR')) {
-              showMessage(res, 'Incuir Aluno', 'error')
-            } else {
-              showMessage(res, 'Incuir Aluno', 'info')
-              clearFields()
-            }
-          })
-        }
-      })
-  }
-
-  // insert data from a .xslx file
-  function insertAlunoExcel() {
-    let dictPath = process.cwd()
-    let fileName = 'RM_2020_base.xlsx'
-    let filePath = `${dictPath}/${fileName}`
-
-    readXlsxFile(filePath).then((rows) => {
-      rows.forEach((row, index) => {
-        let norm = normalize(row)
-        let newRa = parseInt(index + 1, 10)
-
-        const values = [
-          `${newRa}`,
-          `${row}`,
-          norm,
-          '00000000',
-          `${treatRa(newRa)}`,
-          '',
-          '',
-        ]
-        sendAsync('INSERT_EXCEL', values).then((res) => {
-          if (res.includes('ERROR')) {
-            showMessage(res, 'Incuir Aluno', 'error')
-          }
-        })
-      })
-    })
+      case 'rm':
+        return StringMask.apply(value, '###.##0', { reverse: true })
+    }
   }
 
   function normalize(text) {
@@ -255,45 +271,68 @@ precisam ser preenhidos.`,
       .toLowerCase()
   }
 
-  function searchAluno() {
-    let newRA = treatRa(dados.ra)
+  function showMessage(message, title, type, values = '') {
+    if (type === 'question') {
+      dialog
+        .showMessageBox({
+          buttons: ['SIM', 'NÃO'],
+          cancelId: 1,
+          defaultId: 0,
+          message,
+          title,
+          type,
+        })
+        .then((res) => {
+          if (res.response == 0) {
+            // SIM
+            postAluno(values, title)
+          }
+        })
+    } else {
+      dialog.showMessageBoxSync({
+        message,
+        title,
+        type,
+        buttons: ['OK'],
+      })
+    }
+  }
 
-    const values = [
-      `${normalize(dados.nomeAluno)}%`,
-      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
-      `${newRA}%`,
-      `${normalize(dados.nomeMae)}%`,
-    ]
-
-    sendAsync('SELECT', values).then((resp) => {
-      if (resp.includes('ERROR')) {
-        showMessage(resp, 'Pesquisar Aluno', 'error')
+  //---------------------- DATABASE QUERIES --------------------------
+  function postAluno(values, title) {
+    sendAsync('INSERT', values).then((res) => {
+      if (res.includes('UNIQUE')) {
+        let errorMsg = `${msgError.unique} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('ERROR')) {
+        showMessage(res, title, 'error')
       } else {
-        if (resp.length === 0) {
-          showMessage('Nenhum aluno encontrado!', 'Pesquisar Aluno', 'info')
-        }
-        setAlunos(resp)
+        showMessage(res, title, 'info')
+        clearFieldsHandler()
       }
     })
   }
 
-  function showMessage(message, title, type) {
-    dialog.showMessageBox({
-      message,
-      title,
-      type,
-      buttons: ['OK'],
-    })
+  function treatDataNasc(value) {
+    return String(value).replace(/\D+/g, '')
   }
 
   function treatRa(value) {
-    let raUnmasked = String(value).replace(/[\W_]/g, '').toUpperCase()
-
-    return raUnmasked
+    return String(value).replace(/[\W_]/g, '').toUpperCase()
   }
 
-  function validateDateLength(string) {
-    return RegExp(/\d{8}/g).test(string)
+  //---------------------- VALIDATORS --------------------------
+  function validateDate(date) {
+    alert(date)
+    let test = new RegExp(
+      /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/g
+    ).test(date)
+      alert(test)
+    return test
+  }
+
+  function validateDateLength(date) {
+    return RegExp(/\d{8}/g).test(date)
   }
 
   return (
@@ -335,7 +374,7 @@ precisam ser preenhidos.`,
       </div>
 
       <div className='buttons'>
-        <Button className='button' id='incluir' onClick={insertAluno}>
+        <Button className='button' id='incluir' onClick={incluirAlunoHandler}>
           Incluir Aluno
         </Button>
 
@@ -343,7 +382,7 @@ precisam ser preenhidos.`,
           Pesquisar Aluno
         </Button>
 
-        <Button className='button' id='limpar' onClick={clearFields}>
+        <Button className='button' id='limpar' onClick={clearFieldsHandler}>
           Limpar Campos
         </Button>
       </div>
