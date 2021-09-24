@@ -171,7 +171,7 @@ precisam ser preenhidos.`,
     //       showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
     //     }
     //   } else {
-    let newRA = treatRaValue(dados.ra)
+    let newRA = treatRa(dados.ra)
     let nomeAlunoCap = capitalize(dados.nomeAluno)
     let nomeMaeCap = capitalize(dados.nomeMae)
 
@@ -234,7 +234,7 @@ precisam ser preenhidos.`,
           `${row}`,
           norm,
           '00000000',
-          `${treatRaValue(newRa)}`,
+          `${treatRa(newRa)}`,
           '',
           '',
         ]
@@ -256,7 +256,7 @@ precisam ser preenhidos.`,
   }
 
   function searchAluno() {
-    let newRA = treatRaValue(dados.ra)
+    let newRA = treatRa(dados.ra)
 
     const values = [
       `${normalize(dados.nomeAluno)}%`,
@@ -286,15 +286,10 @@ precisam ser preenhidos.`,
     })
   }
 
-  function treatRaValue(value) {
+  function treatRa(value) {
     let raUnmasked = String(value).replace(/[\W_]/g, '').toUpperCase()
 
     return raUnmasked
-    // if (raUnmasked.length == 0) {
-    //   return '%'
-    // } else {
-    //   return StringMask.apply(raUnmasked, '000000000A', { reverse: true })
-    // }
   }
 
   function validateDateLength(string) {
