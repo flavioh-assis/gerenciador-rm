@@ -7,37 +7,6 @@ import StringMask from 'string-mask'
 const { dialog } = require('electron').remote
 
 export default () => {
-  const initialDados = {
-    nomeAluno: '',
-    dataNasc: '',
-    ra: '',
-    nomeMae: '',
-  }
-  const [dados, setDados] = useState({
-    nomeAluno: '',
-    dataNasc: '',
-    ra: '',
-    nomeMae: '',
-  })
-  const [alunos, setAlunos] = useState([
-    // {
-    //   id: 80000,
-    //   nomeAluno: 'Flavio',
-    //   dataNasc: '01012000',
-    //   ra: '1',
-    //   nomeMae: 'Bete',
-    // },
-  ])
-  const msgError = {
-    correction: 'Por favor, corrija-o.',
-    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA"
-precisam ser preenhidos.`,
-    unique: 'Já existe esse R.A. no sistema.',
-    wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
-    wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
-    wrongMonth: 'O MÊS da DATA DE NASCIMENTO está incorreto.',
-    wrongYear: 'O ANO da DATA DE NASCIMENTO está incorreto.',
-  }
   const columns = [
     {
       align: 'center',
@@ -47,7 +16,7 @@ precisam ser preenhidos.`,
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        let rm = String(params.getValue('id'))
+        let rm = String(params.getValue(`id`))
         return applyMask(rm, 'rm')
       },
     },
@@ -87,7 +56,6 @@ precisam ser preenhidos.`,
       headerName: 'Nome da Mãe',
       headerAlign: 'center',
     },
-    // inuteis
     {
       field: 'id',
       hide: true,
@@ -101,51 +69,71 @@ precisam ser preenhidos.`,
       hide: true,
     },
   ]
+  const initialDados = {
+    nomeAluno: '',
+    dataNasc: '',
+    ra: '',
+    nomeMae: '',
+  }
+  const msgError = {
+    correction: 'Por favor, faça a correção.',
+    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA"
+precisam ser preenhidos.`,
+    unique: 'Já existe esse R.A. no sistema.',
+    wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
+    wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
+    wrongMonth: 'O MÊS da DATA DE NASCIMENTO está incorreto.',
+    wrongYear: 'O ANO da DATA DE NASCIMENTO está incorreto.',
+  }
+  const [dados, setDados] = useState({
+    nomeAluno: '',
+    dataNasc: '',
+    ra: '',
+    nomeMae: '',
+  })
+  const [alunos, setAlunos] = useState([])
+  const [page, setPage] = useState(0)
 
   //---------------------- HANDLERS --------------------------
+  function clearFieldsHandler() {
+    setDados(initialDados)
+  }
+
   function incluirAlunoHandler() {
-    const dataClean = treatDataNasc(dados.dataNasc) 
+    let dataClean = treatDataNasc(dados.dataNasc)
+    let errorTitle = 'Erro ao Incluir Aluno'
 
-    if (
-      [dados.nomeAluno, treatDataNasc(dados.dataNasc), dados.ra].includes('')
-    ) {
-      showMessage(msgError.emptyFields, 'Erro ao Incluir Aluno', 'error')
+    if ([dados.nomeAluno, dataClean, dados.ra].includes('')) {
+      showMessage(msgError.emptyFields, errorTitle, 'error')
     } else if (!validateDateLength(dataClean)) {
-      showMessage(msgError.wrongDate, 'Erro ao Incluir Aluno', 'error')
+      showMessage(msgError.wrongDate, errorTitle, 'error')
     } else {
-      const dataSliced = sliceDate(treatDataNasc(dados.dataNasc))
-      const currentYear = new Date().getFullYear()
+      let month = parseInt(dataClean.substr(2, 2), 10)
+      let year = parseInt(dataClean.substr(4, 4), 10)
+      let currentYear = new Date().getFullYear()
 
-      if (dataSliced.year < 2000 || dataSliced.year > currentYear - 5) {
+      if (year < 2000 || year > currentYear - 5) {
         let errorMsg = `${msgError.wrongYear} ${msgError.correction}`
-        showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
-
+        showMessage(errorMsg, errorTitle, 'error')
       } else if (!validateDate(dados.dataNasc)) {
-        if (dataSliced.month < 1 || dataSliced.month > 12) {
+        if (month < 1 || month > 12) {
           let errorMsg = `${msgError.wrongMonth} ${msgError.correction}`
-          showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
+          showMessage(errorMsg, errorTitle, 'error')
         } else {
           let errorMsg = `${msgError.wrongDay} ${msgError.correction}`
-          showMessage(errorMsg, 'Erro ao Incluir Aluno', 'error')
+          showMessage(errorMsg, errorTitle, 'error')
         }
       } else {
-        const values = createValuesArray()
+        let values = createValuesPost()
 
-        const msg = createQuestionMessage(values)
+        let msg = createQuestionMessage(values)
 
         showMessage(msg, 'Incluir Aluno(a)', 'question', values)
       }
     }
   }
 
-  function sliceDate(date) {
-    return {
-      month: parseInt(date.substr(2, 2), 10),
-      year: parseInt(date.substr(4, 4), 10),
-    }
-  }
-
-  function postAlunoExcel() {
+  function incluirAlunoExcelHandler() {
     let dictPath = process.cwd()
     let fileName = 'RM_2020_base.xlsx'
     let filePath = `${dictPath}/${fileName}`
@@ -174,15 +162,28 @@ precisam ser preenhidos.`,
   }
 
   function searchAluno() {
-    let raValue = treatRa(dados.ra)
+    let values = createValuesSelect()
 
-    const values = [
-      `${normalize(dados.nomeAluno)}%`,
-      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
-      `${raValue}%`,
-      `${normalize(dados.nomeMae)}%`,
-    ]
+    setPage(0)
+    selectAlunos(values)
+  }
 
+  //---------------------- DATABASE QUERIES --------------------------
+  function postAluno(values, title) {
+    sendAsync('INSERT', values).then((res) => {
+      if (res.includes('UNIQUE')) {
+        let errorMsg = `${msgError.unique} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('ERROR')) {
+        showMessage(res, title, 'error')
+      } else {
+        showMessage(res, title, 'info')
+        clearFieldsHandler()
+      }
+    })
+  }
+
+  function selectAlunos(values) {
     sendAsync('SELECT', values).then((resp) => {
       if (resp.includes('ERROR')) {
         showMessage(resp, 'Pesquisar Aluno', 'error')
@@ -195,12 +196,17 @@ precisam ser preenhidos.`,
     })
   }
 
-  function clearFieldsHandler() {
-    setDados(initialDados)
+  //---------------------- CREATORS --------------------------
+  function createQuestionMessage(values) {
+    return `Confira os dados abaixo:
+    Aluno: ${values[0]}
+    Nasc.:  ${applyMask(values[2], 'data')}
+    RA.:      ${applyMask(values[3], 'ra')}
+    Mãe:    ${values[4] || 'NÃO INFORMADA'}\n
+    Os dados estão corretos?`
   }
 
-  //---------------------- CREATORS --------------------------
-  function createValuesArray() {
+  function createValuesPost() {
     return [
       capitalize(dados.nomeAluno),
       normalize(dados.nomeAluno),
@@ -211,64 +217,13 @@ precisam ser preenhidos.`,
     ]
   }
 
-  function createQuestionMessage(values) {
-    return `Confira os dados abaixo:
-    Aluno: ${values[0]}
-    Nasc.:  ${applyMask(values[2], 'data')}
-    RA.:      ${applyMask(values[3], 'ra')}
-    Mãe:    ${values[4] || 'NÃO INFORMADA'}\n
-    Os dados estão corretos?`
-  }
-
-  //---------------------- TRANSFORMERS --------------------------
-  function capitalize(text) {
-    //split the given string into an array of strings
-    //whenever a blank space is encountered
-
-    let arr = text.replace('  ', ' ')
-    arr = text.split(' ')
-
-    //loop through each element of the array and capitalize the first
-    //letter if it have more than 2 chars. If it have less than that, all
-    //letters will go to lower case
-
-    let textCapitalized = []
-
-    arr.forEach((word) => {
-      if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
-        textCapitalized.push(
-          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        )
-      } else {
-        textCapitalized.push(word.toLowerCase())
-      }
-    })
-
-    //Join all the elements of the array back into a string
-    //using a blankspace as a separator
-
-    return textCapitalized.join(' ')
-  }
-
-  function applyMask(value, type) {
-    switch (type) {
-      case 'data':
-        return StringMask.apply(value, '00/00/0000')
-
-      case 'ra':
-        return StringMask.apply(value, '000.000.000-A')
-
-      case 'rm':
-        return StringMask.apply(value, '###.##0', { reverse: true })
-    }
-  }
-
-  function normalize(text) {
-    return String(text)
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(/[`´'"]/g, '')
-      .toLowerCase()
+  function createValuesSelect() {
+    return [
+      `${normalize(dados.nomeAluno)}%`,
+      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
+      `${treatRa(dados.ra)}%`,
+      `${normalize(dados.nomeMae)}%`,
+    ]
   }
 
   function showMessage(message, title, type, values = '') {
@@ -298,19 +253,55 @@ precisam ser preenhidos.`,
     }
   }
 
-  //---------------------- DATABASE QUERIES --------------------------
-  function postAluno(values, title) {
-    sendAsync('INSERT', values).then((res) => {
-      if (res.includes('UNIQUE')) {
-        let errorMsg = `${msgError.unique} ${msgError.correction}`
-        showMessage(errorMsg, title, 'error')
-      } else if (res.includes('ERROR')) {
-        showMessage(res, title, 'error')
+  //---------------------- TRANSFORMERS --------------------------
+  function applyMask(value, type) {
+    switch (type) {
+      case 'data':
+        return StringMask.apply(value, '00/00/0000')
+
+      case 'ra':
+        return StringMask.apply(value, '000.000.000-A', { reverse: true })
+
+      case 'rm':
+        return StringMask.apply(value, '###.##0', { reverse: true })
+    }
+  }
+
+  function capitalize(text) {
+    //split the given string into an array of strings
+    //whenever a blank space is encountered
+
+    let arr = text.replace('  ', ' ')
+    arr = text.split(' ')
+
+    //loop through each element of the array and capitalize the first
+    //letter if it have more than 2 chars. If it have less than that, all
+    //letters will go to lower case
+
+    let textCapitalized = []
+
+    arr.forEach((word) => {
+      if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
+        textCapitalized.push(
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
       } else {
-        showMessage(res, title, 'info')
-        clearFieldsHandler()
+        textCapitalized.push(word.toLowerCase())
       }
     })
+
+    //Join all the elements of the array back into a string
+    //using a blankspace as a separator
+
+    return textCapitalized.join(' ')
+  }
+
+  function normalize(text) {
+    return String(text)
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[`´'"]/g, '')
+      .toLowerCase()
   }
 
   function treatDataNasc(value) {
@@ -323,12 +314,9 @@ precisam ser preenhidos.`,
 
   //---------------------- VALIDATORS --------------------------
   function validateDate(date) {
-    alert(date)
-    let test = new RegExp(
+    return RegExp(
       /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/g
     ).test(date)
-      alert(test)
-    return test
   }
 
   function validateDateLength(date) {
@@ -344,6 +332,7 @@ precisam ser preenhidos.`,
           onChange={(t) => setDados({ ...dados, nomeAluno: t.target.value })}
           value={dados.nomeAluno}
           variant='outlined'
+          required
         />
 
         <InputMask
@@ -352,7 +341,9 @@ precisam ser preenhidos.`,
           mask='99/99/9999'
           value={dados.dataNasc}
         >
-          {() => <TextField label='Data de Nascimento' variant='outlined' />}
+          {() => (
+            <TextField label='Data de Nascimento' variant='outlined' required />
+          )}
         </InputMask>
 
         <InputMask
@@ -361,7 +352,7 @@ precisam ser preenhidos.`,
           mask='999.999.999-*'
           value={dados.ra}
         >
-          {() => <TextField label='R.A.' variant='outlined' />}
+          {() => <TextField label='R.A.' variant='outlined' required />}
         </InputMask>
 
         <TextField
@@ -393,7 +384,9 @@ precisam ser preenhidos.`,
           columns={columns}
           disableColumnMenu={true}
           disableSelectionOnClick
+          page={page}
           pageSize={5}
+          onPageChange={(newPage) => setPage(newPage.page)}
           rows={alunos}
           rowHeight={45}
         />
