@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button, TextField } from '@material-ui/core'
 import { DataGrid } from '@material-ui/data-grid'
 import InputMask from 'react-input-mask'
-import sendAsync from '../../../app/api/renderer'
+import MacAddress from 'macaddress'
+import { remote } from 'electron'
 import StringMask from 'string-mask'
-const { dialog } = require('electron').remote
+
+import sendAsync from '../../../app/api/renderer'
 
 export default () => {
   const columns = [
@@ -16,7 +18,7 @@ export default () => {
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        let rm = String(params.getValue(`id`))
+        const rm = String(params.getValue(`id`))
         return applyMask(rm, 'rm')
       },
     },
@@ -34,7 +36,7 @@ export default () => {
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        let date = String(params.getValue('dataNasc'))
+        const date = String(params.getValue('dataNasc'))
         return applyMask(date, 'data')
       },
     },
@@ -46,7 +48,7 @@ export default () => {
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        let ra = String(params.getValue('ra'))
+        const ra = String(params.getValue('ra'))
         return applyMask(ra, 'ra')
       },
     },
@@ -75,24 +77,42 @@ export default () => {
     ra: '',
     nomeMae: '',
   }
+  const MACs = ['70:85:c2:77:72:c4']
   const msgError = {
     correction: 'Por favor, faça a correção.',
     emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA"
 precisam ser preenhidos.`,
+    macNotAuthorized:
+      'Esse computador não está autorizado para o uso do sistema.',
     unique: 'Já existe esse R.A. no sistema.',
     wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
     wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
     wrongMonth: 'O MÊS da DATA DE NASCIMENTO está incorreto.',
     wrongYear: 'O ANO da DATA DE NASCIMENTO está incorreto.',
   }
+  const [alunos, setAlunos] = useState([])
   const [dados, setDados] = useState({
     nomeAluno: '',
     dataNasc: '',
     ra: '',
     nomeMae: '',
   })
-  const [alunos, setAlunos] = useState([])
   const [page, setPage] = useState(0)
+  const [runApp, setRunApp] = useState(false)
+
+  useEffect(() => {
+    MacAddress.all().then((networks) => {
+      const networksName = Object.keys(networks)
+
+      networksName.forEach((netName) => {
+        MACs.forEach((mac) => {
+          if (mac === networks[netName]['mac']) {
+            setRunApp(true)
+          }
+        })
+      })
+    })
+  })
 
   //---------------------- HANDLERS --------------------------
   function clearFieldsHandler() {
@@ -100,48 +120,52 @@ precisam ser preenhidos.`,
   }
 
   function incluirAlunoHandler() {
-    let dataClean = treatDataNasc(dados.dataNasc)
-    let errorTitle = 'Erro ao Incluir Aluno'
+    if (runApp) {
+      const dataClean = treatDataNasc(dados.dataNasc)
+      const errorTitle = 'Erro ao Incluir Aluno'
 
-    if ([dados.nomeAluno, dataClean, dados.ra].includes('')) {
-      showMessage(msgError.emptyFields, errorTitle, 'error')
-    } else if (!validateDateLength(dataClean)) {
-      showMessage(msgError.wrongDate, errorTitle, 'error')
-    } else {
-      let month = parseInt(dataClean.substr(2, 2), 10)
-      let year = parseInt(dataClean.substr(4, 4), 10)
-      let currentYear = new Date().getFullYear()
-
-      if (year < 2000 || year > currentYear - 5) {
-        let errorMsg = `${msgError.wrongYear} ${msgError.correction}`
-        showMessage(errorMsg, errorTitle, 'error')
-      } else if (!validateDate(dados.dataNasc)) {
-        if (month < 1 || month > 12) {
-          let errorMsg = `${msgError.wrongMonth} ${msgError.correction}`
-          showMessage(errorMsg, errorTitle, 'error')
-        } else {
-          let errorMsg = `${msgError.wrongDay} ${msgError.correction}`
-          showMessage(errorMsg, errorTitle, 'error')
-        }
+      if ([dados.nomeAluno, dataClean, dados.ra].includes('')) {
+        showMessage(msgError.emptyFields, errorTitle, 'error')
+      } else if (!validateDateLength(dataClean)) {
+        showMessage(msgError.wrongDate, errorTitle, 'error')
       } else {
-        let values = createValuesPost()
+        const month = parseInt(dataClean.substr(2, 2), 10)
+        const year = parseInt(dataClean.substr(4, 4), 10)
+        const currentYear = new Date().getFullYear()
 
-        let msg = createQuestionMessage(values)
+        if (year < 2000 || year > currentYear - 5) {
+          const errorMsg = `${msgError.wrongYear} ${msgError.correction}`
+          showMessage(errorMsg, errorTitle, 'error')
+        } else if (!validateDate(dados.dataNasc)) {
+          if (month < 1 || month > 12) {
+            const errorMsg = `${msgError.wrongMonth} ${msgError.correction}`
+            showMessage(errorMsg, errorTitle, 'error')
+          } else {
+            const errorMsg = `${msgError.wrongDay} ${msgError.correction}`
+            showMessage(errorMsg, errorTitle, 'error')
+          }
+        } else {
+          const values = createValuesPost()
 
-        showMessage(msg, 'Incluir Aluno(a)', 'question', values)
+          const msg = createQuestionMessage(values)
+
+          showMessage(msg, 'Incluir Aluno(a)', 'question', values)
+        }
       }
+    } else {
+      showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error')
     }
   }
 
   function incluirAlunoExcelHandler() {
-    let dictPath = process.cwd()
-    let fileName = 'RM_2020_base.xlsx'
-    let filePath = `${dictPath}/${fileName}`
+    const dictPath = process.cwd()
+    const fileName = 'RM_2020_base.xlsx'
+    const filePath = `${dictPath}/${fileName}`
 
     readXlsxFile(filePath).then((rows) => {
       rows.forEach((row, index) => {
-        let norm = normalize(row)
-        let newRa = parseInt(index + 1, 10)
+        const norm = normalize(row)
+        const newRa = parseInt(index + 1, 10)
 
         const values = [
           `${newRa}`,
@@ -161,18 +185,21 @@ precisam ser preenhidos.`,
     })
   }
 
-  function searchAluno() {
-    let values = createValuesSelect()
-
-    setPage(0)
-    selectAlunos(values)
+  function searchAlunoHandler() {
+    if (runApp) {
+      const values = createValuesSelect()
+      setPage(0)
+      selectAlunos(values)
+    } else {
+      showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error')
+    }
   }
 
   //---------------------- DATABASE QUERIES --------------------------
   function postAluno(values, title) {
     sendAsync('INSERT', values).then((res) => {
       if (res.includes('UNIQUE')) {
-        let errorMsg = `${msgError.unique} ${msgError.correction}`
+        const errorMsg = `${msgError.unique} ${msgError.correction}`
         showMessage(errorMsg, title, 'error')
       } else if (res.includes('ERROR')) {
         showMessage(res, title, 'error')
@@ -228,7 +255,7 @@ precisam ser preenhidos.`,
 
   function showMessage(message, title, type, values = '') {
     if (type === 'question') {
-      dialog
+      remote.dialog
         .showMessageBox({
           buttons: ['SIM', 'NÃO'],
           cancelId: 1,
@@ -244,7 +271,7 @@ precisam ser preenhidos.`,
           }
         })
     } else {
-      dialog.showMessageBoxSync({
+      remote.dialog.showMessageBoxSync({
         message,
         title,
         type,
@@ -278,7 +305,7 @@ precisam ser preenhidos.`,
     //letter if it have more than 2 chars. If it have less than that, all
     //letters will go to lower case
 
-    let textCapitalized = []
+    const textCapitalized = []
 
     arr.forEach((word) => {
       if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
@@ -369,7 +396,7 @@ precisam ser preenhidos.`,
           Incluir Aluno
         </Button>
 
-        <Button className='button' id='pesquisar' onClick={searchAluno}>
+        <Button className='button' id='pesquisar' onClick={searchAlunoHandler}>
           Pesquisar Aluno
         </Button>
 
