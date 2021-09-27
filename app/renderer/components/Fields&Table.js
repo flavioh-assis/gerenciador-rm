@@ -3,8 +3,8 @@ import { Button, TextField } from '@material-ui/core'
 import { DataGrid } from '@material-ui/data-grid'
 import InputMask from 'react-input-mask'
 import MacAddress from 'macaddress'
-import { remote } from 'electron'
 import StringMask from 'string-mask'
+const { dialog } = require('electron').remote
 
 import sendAsync from '../../../app/api/renderer'
 
@@ -220,12 +220,14 @@ export default () => {
   }
 
   function selectAlunos(values) {
+    const msgTitle = 'Pesquisar Aluno'
+
     sendAsync('SELECT', values).then((resp) => {
       if (resp.includes('ERROR')) {
-        showMessage(resp, 'Pesquisar Aluno', 'error')
+        showMessage(resp, msgTitle, 'error')
       } else {
         if (resp.length === 0) {
-          showMessage('Nenhum aluno encontrado!', 'Pesquisar Aluno', 'info')
+          showMessage('Nenhum aluno encontrado!', msgTitle, 'info')
         }
         setAlunos(resp)
       }
@@ -264,7 +266,7 @@ export default () => {
 
   function showMessage(message, title, type, values = '') {
     if (type === 'question') {
-      remote.dialog
+      dialog
         .showMessageBox({
           buttons: ['SIM', 'NÃO'],
           cancelId: 1,
@@ -280,7 +282,7 @@ export default () => {
           }
         })
     } else {
-      remote.dialog.showMessageBoxSync({
+      dialog.showMessageBoxSync({
         message,
         title,
         type,
