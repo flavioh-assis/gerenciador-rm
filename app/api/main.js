@@ -15,11 +15,11 @@ try {
     fs.mkdirSync(dbDirPath)
   }
   pathDB = resolve(join(dbDirPath, dbName))
-  
+
   db = new Database(pathDB, (err) => {
     if (err) console.error('Database opening error: ', err)
   })
-  
+
   db.run(
     `CREATE TABLE IF NOT EXISTS "alunos" (
     "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,21 +48,19 @@ function backupDB() {
 }
 
 ipcMain.on('asynchronous-message', (event, option, values) => {
-  const inserted = 'Aluno inserido com sucesso.'
-  let sql = ''
-
   switch (option) {
     case 'INSERT':
-      sql = `INSERT INTO
+      const insertedMsg = 'Aluno inserido com sucesso.'
+      const sql = `INSERT INTO
       alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
       VALUES(?, ?, ?, ?, ?, ?)`
 
       try {
-        /* const res =  */backupDB()
-        
+        backupDB()
+
         db.run(sql, values, (err) => {
-          event.reply('asynchronous-reply', (err && err.message) || inserted)
-      })
+          event.reply('asynchronous-reply', (err && err.message) || insertedMsg)
+        })
       } catch (error) {
         event.reply('asynchronous-reply', error.message)
       }
@@ -70,7 +68,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'INSERT_EXCEL':
-      sql = `INSERT INTO
+      const sql = `INSERT INTO
         alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
         VALUES(?, ?, ?, ?, ?, ?, ?)`
 
@@ -80,7 +78,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'SELECT':
-      sql = `SELECT *
+      const sql = `SELECT *
       FROM alunos
       WHERE nomeAlunoNorm LIKE ?
       AND dataNasc LIKE ?
