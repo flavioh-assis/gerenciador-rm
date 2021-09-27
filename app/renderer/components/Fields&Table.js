@@ -9,6 +9,10 @@ import StringMask from 'string-mask'
 import sendAsync from '../../../app/api/renderer'
 
 export default () => {
+  const authorizedMACs = [
+    '70:85:c2:77:72:c4', // PC linux
+    'b8:97:5a:5e:b0:f1', // PC Sec Flavio
+  ]
   const columns = [
     {
       align: 'center',
@@ -77,13 +81,11 @@ export default () => {
     ra: '',
     nomeMae: '',
   }
-  const MACs = ['70:85:c2:77:72:c4']
   const msgError = {
     correction: 'Por favor, faça a correção.',
-    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA"
-precisam ser preenhidos.`,
+    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenhidos.`,
     macNotAuthorized:
-      'Esse computador não está autorizado para o uso do sistema.',
+      'Esse computador não está autorizado para o uso do sistema ou está sem acesso à internet.',
     unique: 'Já existe esse R.A. no sistema.',
     wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
     wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
@@ -105,7 +107,7 @@ precisam ser preenhidos.`,
       const networksName = Object.keys(networks)
 
       networksName.forEach((netName) => {
-        MACs.forEach((mac) => {
+        authorizedMACs.forEach((mac) => {
           if (mac === networks[netName]['mac']) {
             setRunApp(true)
           }
@@ -187,7 +189,13 @@ precisam ser preenhidos.`,
 
   function searchAlunoHandler() {
     if (runApp) {
-      const values = createValuesSelect()
+      const values = createValuesSelect(
+        dados.ra,
+        dados.nomeAluno,
+        dados.dataNasc,
+        dados.nomeMae
+      )
+
       setPage(0)
       selectAlunos(values)
     } else {
@@ -204,6 +212,7 @@ precisam ser preenhidos.`,
       } else if (res.includes('ERROR')) {
         showMessage(res, title, 'error')
       } else {
+        selectAlunos(createValuesSelect(dados.ra))
         showMessage(res, title, 'info')
         clearFieldsHandler()
       }
@@ -244,12 +253,12 @@ precisam ser preenhidos.`,
     ]
   }
 
-  function createValuesSelect() {
+  function createValuesSelect(ra, aluno = '', nasc = '', mae = '') {
     return [
-      `${normalize(dados.nomeAluno)}%`,
-      `${String(dados.dataNasc).replace(/\D+/g, '')}%`,
-      `${treatRa(dados.ra)}%`,
-      `${normalize(dados.nomeMae)}%`,
+      `${normalize(aluno)}%`,
+      `${String(nasc).replace(/\D+/g, '')}%`,
+      `${treatRa(ra)}%`,
+      `${normalize(mae)}%`,
     ]
   }
 
@@ -359,7 +368,6 @@ precisam ser preenhidos.`,
           onChange={(t) => setDados({ ...dados, nomeAluno: t.target.value })}
           value={dados.nomeAluno}
           variant='outlined'
-          required
         />
 
         <InputMask
@@ -368,9 +376,7 @@ precisam ser preenhidos.`,
           mask='99/99/9999'
           value={dados.dataNasc}
         >
-          {() => (
-            <TextField label='Data de Nascimento' variant='outlined' required />
-          )}
+          {() => <TextField label='Data de Nascimento' variant='outlined' />}
         </InputMask>
 
         <InputMask
@@ -379,7 +385,7 @@ precisam ser preenhidos.`,
           mask='999.999.999-*'
           value={dados.ra}
         >
-          {() => <TextField label='R.A.' variant='outlined' required />}
+          {() => <TextField label='R.A.' variant='outlined' />}
         </InputMask>
 
         <TextField
