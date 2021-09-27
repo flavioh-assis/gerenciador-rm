@@ -48,10 +48,12 @@ function backupDB() {
 }
 
 ipcMain.on('asynchronous-message', (event, option, values) => {
+  let sql = ''
+
   switch (option) {
     case 'INSERT':
       const insertedMsg = 'Aluno inserido com sucesso.'
-      const sql = `INSERT INTO
+      sql = `INSERT INTO
       alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
       VALUES(?, ?, ?, ?, ?, ?)`
 
@@ -68,7 +70,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'INSERT_EXCEL':
-      const sql = `INSERT INTO
+      sql = `INSERT INTO
         alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
         VALUES(?, ?, ?, ?, ?, ?, ?)`
 
@@ -78,7 +80,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'SELECT':
-      const sql = `SELECT *
+      sql = `SELECT *
       FROM alunos
       WHERE nomeAlunoNorm LIKE ?
       AND dataNasc LIKE ?
