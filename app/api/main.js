@@ -1,34 +1,51 @@
-import path from 'path'
 import fs from 'fs'
 import { ipcMain } from 'electron'
-const sqlite = require('sqlite3').verbose()
+import { join, resolve } from 'path'
+const { Database } = require('sqlite3').verbose()
 
-const dbDirRelPath = '../../app/api/database/'
-const dbDirFinalPath = path.resolve(path.join(__dirname, dbDirRelPath))
-const fileName = 'db_ger_rm.sqlite3'
+const rootPath = process.cwd()
+const dbDirPath = resolve(join(rootPath, '/Banco_de_Dados/'))
+const dbName = 'db_rm.sqlite3'
 
-if (!fs.existsSync(dbDirFinalPath)) {
-  fs.mkdirSync(dbDirFinalPath)
+let db = ''
+let pathDB = ''
+
+try {
+  if (!fs.existsSync(dbDirPath)) {
+    fs.mkdirSync(dbDirPath)
+  }
+  pathDB = resolve(join(dbDirPath, dbName))
+  
+  db = new Database(pathDB, (err) => {
+    if (err) console.error('Database opening error: ', err)
+  })
+  
+  db.run(
+    `CREATE TABLE IF NOT EXISTS "alunos" (
+    "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+    "nomeAluno"	TEXT,
+    "nomeAlunoNorm"	TEXT,
+    "dataNasc"	TEXT,
+    "ra"	TEXT UNIQUE,
+    "nomeMae"	TEXT,
+    "nomeMaeNorm"	TEXT
+    );`
+  )
+} catch (error) {
+  throw error.message
 }
-const pathToFile = path.resolve(
-  path.join(dbDirFinalPath, fileName)
-)
 
-const database = new sqlite.Database(pathToFile, (err) => {
-  if (err) console.error('Database opening error: ', err)
-})
+function backupDB() {
+  const pathDirBackup = resolve(join(dbDirPath, 'Backup/'))
 
-database.run(
-  `CREATE TABLE IF NOT EXISTS "alunos" (
-	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
-	"nomeAluno"	TEXT,
-	"nomeAlunoNorm"	TEXT,
-	"dataNasc"	TEXT,
-	"ra"	TEXT UNIQUE,
-	"nomeMae"	TEXT,
-	"nomeMaeNorm"	TEXT
-  );`
-)
+  if (!fs.existsSync(pathDirBackup)) {
+    fs.mkdirSync(pathDirBackup)
+  }
+
+  const pathBackup = resolve(join(pathDirBackup, dbName))
+
+  fs.copyFileSync(pathDB, pathBackup)
+}
 
 ipcMain.on('asynchronous-message', (event, option, values) => {
   const inserted = 'Aluno inserido com sucesso.'
@@ -40,9 +57,15 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
       VALUES(?, ?, ?, ?, ?, ?)`
 
-      database.run(sql, values, (err) => {
-        event.reply('asynchronous-reply', (err && err.message) || inserted)
+      try {
+        /* const res =  */backupDB()
+        
+        db.run(sql, values, (err) => {
+          event.reply('asynchronous-reply', (err && err.message) || inserted)
       })
+      } catch (error) {
+        event.reply('asynchronous-reply', error.message)
+      }
 
       break
 
@@ -51,10 +74,9 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
         VALUES(?, ?, ?, ?, ?, ?, ?)`
 
-      database.run(sql, values, (err) => {
+      db.run(sql, values, (err) => {
         event.reply('asynchronous-reply', (err && err.message) || inserted)
       })
-
       break
 
     case 'SELECT':
@@ -66,7 +88,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       AND nomeMaeNorm LIKE ?
       ORDER BY id`
 
-      database.all(sql, values, (err, rows) => {
+      db.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)
       })
       break
