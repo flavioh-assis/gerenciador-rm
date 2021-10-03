@@ -10,7 +10,8 @@ import sendAsync from '../../../app/api/renderer'
 
 export default () => {
   const authorizedMACs = [
-    '70:85:c2:77:72:c4', // PC linux
+    '70:85:c2:77:72:c4', // linux eth
+    '60:e3:27:24:fa:a7', // linux wifi
     'b8:97:5a:5e:b0:f1', // PC Sec Flavio
   ]
   const columns = [
