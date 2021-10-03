@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import * as XLSX from 'xlsx'
 
-const IconExport = '../../../app/assets/icons/icon-export.png'
-const IconImport = '../../../app/assets/icons/icon-import.png'
+const IconExport = '../../app/assets/icons/icon-export.png'
+const IconImport = '../../app/assets/icons/icon-import.png'
 
 const ImportExportExcel = () => {
   const [excelData, setExcelData] = useState('EMPTY')
-  
+
   function readExcel(file) {
     const promise = new Promise((resolve, reject) => {
       const fileReader = new FileReader()
@@ -148,37 +148,37 @@ const ImportExportExcel = () => {
 
   return (
     <div className='impExpExcel'>
-      <p id='title'>Exportar / Importar Dados</p>
+      <p id='title'>Importar / Exportar Dados</p>
       <div id='buttons'>
+        <button onClick={handleImport}>
+          <img
+            src={IconImport}
+            title='Inserir dados de uma planilha Excel para o sistema'
+            alt=''
+          />
+          <p>Importar</p>
+        </button>
         <button onClick={() => alert('Exportar')}>
           <img
             src={IconExport}
             title='Exportar dados do sistema para uma planilha Excel'
             alt=''
           />
-          <p>Exportar Excel</p>
-        </button>
-        <button /* onClick={handleUpload} */>
-          <img
-            onClick={handleImport}
-            src={IconImport}
-            title='Importar dados de uma planilha Excel para o sistema'
-            alt=''
-          />
-          <p>Importar Excel</p>
+          <p>Exportar</p>
         </button>
       </div>
 
-      <div>
-        <input
-          id='file'
-          type='file'
-          onChange={(e) => {
-            let selFile = e.target.files[0]
-            readExcel(selFile)
-          }}
-        />
-      </div>
+      {/* <div className='file'> */}
+      <input
+        title='Clique para selecionar a planilha'
+        id='file'
+        type='file'
+        onChange={(e) => {
+          let selFile = e.target.files[0]
+          readExcel(selFile)
+        }}
+      />
+      {/* </div> */}
     </div>
   )
 }

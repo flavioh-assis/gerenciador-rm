@@ -1,45 +1,50 @@
 .impExpExcel {
-  align-items: center;
   background: #185c37;
+  border: 3px solid #fff;
   border-radius: 10px;
-  border: 2px solid #fff;
   display: flex;
   flex-direction: column;
-  height: 20rem;
-  width: 30rem;
+  height: 33rem;
+  padding: 1rem;
+  width: 50rem;
 }
 .impExpExcel #title {
   color: #fff;
-  font: 500 1.5rem Archivo;
-  margin-top: 2rem;
+  font: 500 1.4rem Archivo;
+  margin-bottom: 1.5rem;
 }
 .impExpExcel p {
   color: #185c37;
-  font: 500 1.2rem Archivo;
+  font: 500 1.5rem Archivo;
 }
-#buttons {
+.impExpExcel #buttons {
   display: flex;
-  margin: auto;
+  margin: 0 auto;
 }
 .impExpExcel button {
+  align-items: center;
   background: #fff;
   border-radius: 5px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  font: 500 1.1rem Archivo;
-  height: 11.5rem;
-  margin: 1rem;
-  padding: 0.5rem 0.5rem 0 0.5rem;
-  width: 11rem;
+  font: 500 1.4rem Archivo;
+  height: 19rem;
+  justify-content: center;
+  margin: 2rem;
+  width: 17rem;
 }
 .impExpExcel button:hover {
-  box-shadow: 4px 4px 3px #33c481;
+  box-shadow: 0px 0px 10px 10px #33c481;
   transition: box-shadow 0.2s ease-in-out;
 }
-.label {
-  cursor: pointer;
+.impExpExcel img {
+  height: 15rem;
 }
-input {
-  margin-bottom: 1rem;
+.impExpExcel #file {
+  color: #fff;
+  font-size: 1.5rem;
+  height: 3rem;
+  margin-left: 4.9rem;
+  width: 22rem;
 }
