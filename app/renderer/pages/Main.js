@@ -1,34 +1,26 @@
-import React from 'react'
-import FieldsTable from '../components/Fields&Table'
-import ImportExportExcel from '../components/ImportExportExcel'
-const { dialog } = require('electron').remote
+import React, { useState } from 'react'
 
+import FieldsTable from '../components/Fields&Table'
+import ImpExpExcel from '../components/ImportExportExcel'
 const Header = '../../app/assets/images/header_mvmi.png'
 
 export default () => {
-  function importExportExcel() {
-    dialog.showMessageBox({
-      title: 'Teste',
-      message: 'Teste',
-      type: 'question',
-    })
-  }
-  
+  const [isMainPage, setIsMainPage] = useState(true)
+
   return (
     <div className='container'>
       <div className='page'>
         <div className='titulo'>
           <img
-            alt='EMEB. Maria Virgínia Matarazzo Ippólito'
             id='header'
-            onClick={importExportExcel}
+            onClick={() => setIsMainPage(!isMainPage)}
             src={Header}
-            title='Exportar/Importar dados'
+            title={isMainPage ? 'Importar/Exportar dados' : 'Voltar ao início'}
           />
           <p id='title'>GERENCIADOR DE RM</p>
         </div>
 
-        <FieldsTable />
+        {isMainPage ? <FieldsTable /> : <ImpExpExcel />}
       </div>
     </div>
   )
