@@ -22,7 +22,15 @@ const ImportExportExcel = () => {
         const wsName = wb.SheetNames[0]
         const ws = wb.Sheets[wsName]
 
-        const data = XLSX.utils.sheet_to_json(ws)
+        const data = XLSX.utils.sheet_to_json(ws, {
+          header: ['rm', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
+        })
+
+        if (!(data[0].rm > 0)) {
+          data = XLSX.utils.sheet_to_json(ws, {
+            header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'rm'],
+          })
+        }
 
         resolve(data)
       }
@@ -47,15 +55,14 @@ const ImportExportExcel = () => {
         let dataFinal = day + month + year
         // alert(JSON.stringify(dataFinal, null, 2))
 
-        let newData = {...element, dataNasc: dataFinal }
+        let newData = { ...element, dataNasc: dataFinal }
         // alert(JSON.stringify(newData, null, 2))
 
         alunos.push(newData)
       })
 
       setExcelData(alunos)
-      alert(JSON.stringify(alunos, null, 2))
-      // alert(JSON.stringify(data, null, 2))
+      // alert(JSON.stringify(alunos, null, 2))
       alert(
         'Leitura da planilha concluída! Dados prontos para serem importados.'
       )
@@ -64,11 +71,10 @@ const ImportExportExcel = () => {
 
   async function handleImport() {
     if (excelData !== 'EMPTY') {
-
       await excelData.forEach((row) => {
-        alert(JSON.stringify(row, null, 2))
+        // alert(JSON.stringify(row, null, 2))
         let aluno = createAluno(row)
-        alert(JSON.stringify(aluno, null, 2))
+        // alert(JSON.stringify(aluno, null, 2))
         postAluno(aluno)
       })
 
@@ -91,32 +97,24 @@ const ImportExportExcel = () => {
   }
 
   async function postAluno(aluno) {
-    // try {
-    await sendAsync('INSERT_EXCEL', aluno).then((res) => {
-      if (res.includes('ra')) {
-        alert('Já existe esse RA no sistema. Favor, verificar.')
-      } else if(res.includes('id')) {
-        alert('Já existe esse RM no sistema. Favor, verificar.')
-      // } else if (res.includes('ERROR')) {
-        // showMessage(res, 'Incluir Aluno', 'error')
-        // alert(res)
-      } else if (res.includes('OK')) {
-        alert('Dados inseridos com sucesso!')
-      } else {
-        alert(res)
-      }
-    })
-
-    // alert('OK')
-    // } catch (error) {
-    //   showMessage(error, 'Incluir Aluno', 'error')
-    // }
-
-    // alert(JSON.stringify(alunos, null, 1))
-    // // await api.post('/alunos', alunos)
-    // alert('Dados inseridos com sucesso!')
-    // console.log(error)
-    // alert(JSON.stringify(error.response.data, null, 1))
+    await sendAsync('INSERT_EXCEL', aluno)
+      .then((res) => {
+        if (res.includes('ra')) {
+          alert('Já existe esse RA no sistema. Favor, verificar.')
+        } else if (res.includes('rm')) {
+          alert('Já existe esse RM no sistema. Favor, verificar.')
+          // } else if (res.includes('ERROR')) {
+          // showMessage(res, 'Incluir Aluno', 'error')
+          // alert(res)
+        } else if (res.includes('OK')) {
+          alert('Dados inseridos com sucesso!')
+        } else {
+          alert(res)
+        }
+      })
+      .catch((err) => {
+        alert(err.message)
+      })
   }
 
   function createAluno(row) {
@@ -136,15 +134,6 @@ const ImportExportExcel = () => {
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',
     ]
-    // return {
-    //   id: row.rm || null,
-    //   nomeAluno: nomeAlunoCapd,
-    //   nomeAlunoNorm: nomeAlunoNormd,
-    //   dataNasc: dataClean || '01011900',
-    //   ra: raValue || row.rm,
-    //   nomeMae: nomeMaeCapd || 'NÃO INFORMADO',
-    //   nomeMaeNorm: nomeMaeNormd || 'nao informado',
-    // }
   }
 
   function capitalize(text) {

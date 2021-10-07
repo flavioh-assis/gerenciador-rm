@@ -22,7 +22,7 @@ try {
 
   db.run(
     `CREATE TABLE IF NOT EXISTS "alunos" (
-    "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+    "rm"	INTEGER PRIMARY KEY AUTOINCREMENT,
     "nomeAluno"	TEXT,
     "nomeAlunoNorm"	TEXT,
     "dataNasc"	TEXT,
@@ -62,11 +62,9 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         backupDB()
 
         db.run(sql, values, (err) => {
-          console.log(err)
           event.reply('asynchronous-reply', (err && err.message) || insertedMsg)
         })
       } catch (error) {
-        console.log(err)
         event.reply('asynchronous-reply', error.message)
       }
 
@@ -74,29 +72,29 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
 
     case 'INSERT_EXCEL':
       sql = `INSERT INTO
-        alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
+        alunos (rm, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
         VALUES(?, ?, ?, ?, ?, ?, ?)`
 
       try {
         backupDB()
       } catch (error) {
         console.log(error)
-        event.reply('asynchronous-reply', error.message)
+        event.reply('asynchronous-reply', error)
       }
       db.run(sql, values, (err) => {
-        console.log(err)
-        event.reply('asynchronous-reply', /* err &&  */ err.message) || 'OK'
+        if (err) console.log(err)
+        event.reply('asynchronous-reply', err && err.message) || 'OK'
       })
       break
 
     case 'SELECT':
-      sql = `SELECT *
+      sql = `SELECT rm AS id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm
       FROM alunos
       WHERE nomeAlunoNorm LIKE ?
       AND dataNasc LIKE ?
       AND ra LIKE ?
       AND nomeMaeNorm LIKE ?
-      ORDER BY id`
+      ORDER BY rm`
 
       db.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)

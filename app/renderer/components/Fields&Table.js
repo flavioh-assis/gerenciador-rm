@@ -23,7 +23,7 @@ export default () => {
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        const rm = String(params.getValue(`id`))
+        const rm = String(params.getValue('rm'))
         return applyMask(rm, 'rm')
       },
     },
@@ -63,10 +63,10 @@ export default () => {
       headerName: 'Nome da Mãe',
       headerAlign: 'center',
     },
-    {
-      field: 'id',
-      hide: true,
-    },
+    // {
+    //   field: 'id',
+    //   hide: true,
+    // },
     {
       field: 'dataNasc',
       hide: true,
