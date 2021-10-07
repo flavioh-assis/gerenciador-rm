@@ -53,6 +53,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
   switch (option) {
     case 'INSERT':
       const insertedMsg = 'Aluno inserido com sucesso.'
+
       sql = `INSERT INTO
       alunos (nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
       VALUES(?, ?, ?, ?, ?, ?)`
@@ -61,9 +62,11 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         backupDB()
 
         db.run(sql, values, (err) => {
+          console.log(err)
           event.reply('asynchronous-reply', (err && err.message) || insertedMsg)
         })
       } catch (error) {
+        console.log(err)
         event.reply('asynchronous-reply', error.message)
       }
 
@@ -74,8 +77,15 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
         VALUES(?, ?, ?, ?, ?, ?, ?)`
 
+      try {
+        backupDB()
+      } catch (error) {
+        console.log(error)
+        event.reply('asynchronous-reply', error.message)
+      }
       db.run(sql, values, (err) => {
-        event.reply('asynchronous-reply', (err && err.message) || inserted)
+        console.log(err)
+        event.reply('asynchronous-reply', /* err &&  */ err.message) || 'OK'
       })
       break
 

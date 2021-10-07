@@ -206,8 +206,10 @@ export default () => {
 
   //---------------------- DATABASE QUERIES --------------------------
   function postAluno(values, title) {
+    alert(values)
     sendAsync('INSERT', values).then((res) => {
       if (res.includes('UNIQUE')) {
+        alert(res)
         const errorMsg = `${msgError.unique} ${msgError.correction}`
         showMessage(errorMsg, title, 'error')
       } else if (res.includes('ERROR')) {

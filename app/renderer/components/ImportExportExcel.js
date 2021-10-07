@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
 import * as XLSX from 'xlsx'
 
+import sendAsync from '../../../app/api/renderer'
+
 const IconExport = '../../app/assets/icons/icon-export.png'
 const IconImport = '../../app/assets/icons/icon-import.png'
 
 const ImportExportExcel = () => {
   const [excelData, setExcelData] = useState('EMPTY')
 
-  function readExcel(file) {
-    const promise = new Promise((resolve, reject) => {
+  async function readExcel(file) {
+    new Promise((resolve, reject) => {
       const fileReader = new FileReader()
       fileReader.readAsArrayBuffer(file)
 
@@ -28,28 +30,47 @@ const ImportExportExcel = () => {
       fileReader.onerror = (error) => {
         reject(error)
       }
-    })
+    }).then((data) => {
+      let alunos = []
 
-    promise.then((data) => {
-      setExcelData(data)
-      // alert(JSON.stringify(data, null, 1))
+      data.forEach((element) => {
+        let serial = element.dataNasc
+        let datta = new Date(Date.UTC(0, 0, serial, -12))
+        // alert(JSON.stringify(datta, null, 2))
+
+        let dataString = datta.toLocaleDateString()
+        // alert(JSON.stringify(dataString, null, 2))
+        let day = dataString.substr(0, 2)
+        let month = dataString.substr(3, 2)
+        let year = dataString.substr(6, 4)
+
+        let dataFinal = day + month + year
+        // alert(JSON.stringify(dataFinal, null, 2))
+
+        let newData = {...element, dataNasc: dataFinal }
+        // alert(JSON.stringify(newData, null, 2))
+
+        alunos.push(newData)
+      })
+
+      setExcelData(alunos)
+      alert(JSON.stringify(alunos, null, 2))
+      // alert(JSON.stringify(data, null, 2))
       alert(
         'Leitura da planilha concluída! Dados prontos para serem importados.'
       )
     })
   }
 
-  function handleImport() {
+  async function handleImport() {
     if (excelData !== 'EMPTY') {
-      const alunos = []
 
-      excelData.forEach((row) => {
+      await excelData.forEach((row) => {
+        alert(JSON.stringify(row, null, 2))
         let aluno = createAluno(row)
-        // alert(JSON.stringify(aluno, null, 1))
-        alunos.push(aluno)
+        alert(JSON.stringify(aluno, null, 2))
+        postAluno(aluno)
       })
-
-      postAluno(alunos)
 
       // setExcelData('EMPTY')
       // document.getElementById('file').value = ''
@@ -58,15 +79,44 @@ const ImportExportExcel = () => {
     }
   }
 
-  async function postAluno(alunos) {
+  function handleExport() {
     try {
-      // alert(JSON.stringify(alunos, null, 1))
-      await api.post('/alunos', alunos)
-      alert('Dados importados com sucesso!')
-    } catch (error) {
-      console.log(error)
-      alert(JSON.stringify(error.response.data, null, 1))
-    }
+      sendAsync('SELECT').then((res) => {
+        if (res.includes('ERROR')) {
+          showMessage(res, 'Incluir Aluno', 'error')
+        } else {
+        }
+      })
+    } catch (error) {}
+  }
+
+  async function postAluno(aluno) {
+    // try {
+    await sendAsync('INSERT_EXCEL', aluno).then((res) => {
+      if (res.includes('ra')) {
+        alert('Já existe esse RA no sistema. Favor, verificar.')
+      } else if(res.includes('id')) {
+        alert('Já existe esse RM no sistema. Favor, verificar.')
+      // } else if (res.includes('ERROR')) {
+        // showMessage(res, 'Incluir Aluno', 'error')
+        // alert(res)
+      } else if (res.includes('OK')) {
+        alert('Dados inseridos com sucesso!')
+      } else {
+        alert(res)
+      }
+    })
+
+    // alert('OK')
+    // } catch (error) {
+    //   showMessage(error, 'Incluir Aluno', 'error')
+    // }
+
+    // alert(JSON.stringify(alunos, null, 1))
+    // // await api.post('/alunos', alunos)
+    // alert('Dados inseridos com sucesso!')
+    // console.log(error)
+    // alert(JSON.stringify(error.response.data, null, 1))
   }
 
   function createAluno(row) {
@@ -77,15 +127,24 @@ const ImportExportExcel = () => {
     let nomeMaeCapd = capitalize(row.nomeMae)
     let nomeMaeNormd = normalize(nomeMaeCapd)
 
-    return {
-      rm: row.rm || null,
-      nomeAluno: nomeAlunoCapd,
-      nomeAlunoNorm: nomeAlunoNormd,
-      dataNasc: dataClean || '01011900',
-      ra: raValue || row.rm,
-      nomeMae: nomeMaeCapd || 'NÃO INFORMADO',
-      nomeMaeNorm: nomeMaeNormd || 'nao informado',
-    }
+    return [
+      row.rm || null,
+      nomeAlunoCapd,
+      nomeAlunoNormd,
+      dataClean || '01011900',
+      raValue || row.rm,
+      nomeMaeCapd || 'NÃO INFORMADO',
+      nomeMaeNormd || 'nao informado',
+    ]
+    // return {
+    //   id: row.rm || null,
+    //   nomeAluno: nomeAlunoCapd,
+    //   nomeAlunoNorm: nomeAlunoNormd,
+    //   dataNasc: dataClean || '01011900',
+    //   ra: raValue || row.rm,
+    //   nomeMae: nomeMaeCapd || 'NÃO INFORMADO',
+    //   nomeMaeNorm: nomeMaeNormd || 'nao informado',
+    // }
   }
 
   function capitalize(text) {
@@ -168,7 +227,6 @@ const ImportExportExcel = () => {
         </button>
       </div>
 
-      {/* <div className='file'> */}
       <input
         title='Clique para selecionar a planilha'
         id='file'
@@ -178,7 +236,6 @@ const ImportExportExcel = () => {
           readExcel(selFile)
         }}
       />
-      {/* </div> */}
     </div>
   )
 }
