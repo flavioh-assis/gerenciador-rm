@@ -23,7 +23,7 @@ export default () => {
       headerAlign: 'center',
       sortable: false,
       valueGetter: (params) => {
-        const rm = String(params.getValue('rm'))
+        const rm = String(params.getValue('id'))
         return applyMask(rm, 'rm')
       },
     },
@@ -63,10 +63,10 @@ export default () => {
       headerName: 'Nome da Mãe',
       headerAlign: 'center',
     },
-    // {
-    //   field: 'id',
-    //   hide: true,
-    // },
+    {
+      field: 'id',
+      hide: true,
+    },
     {
       field: 'dataNasc',
       hide: true,
@@ -206,7 +206,6 @@ export default () => {
 
   //---------------------- DATABASE QUERIES --------------------------
   function postAluno(values, title) {
-    alert(values)
     sendAsync('INSERT', values).then((res) => {
       if (res.includes('UNIQUE')) {
         alert(res)

@@ -42,6 +42,23 @@ app.on('ready', async () => {
   // show window once on first load
   mainWindow.webContents.once('did-finish-load', () => {
     mainWindow.show()
+    
+    if (isDevelopment) {
+      // auto-open dev tools
+      mainWindow.webContents.openDevTools()
+
+      // add inspect element on right click menu
+      mainWindow.webContents.on('context-menu', (e, props) => {
+        Menu.buildFromTemplate([
+          {
+            label: 'Inspect element',
+            click() {
+              mainWindow.inspectElement(props.x, props.y)
+            },
+          },
+        ]).popup(mainWindow)
+      })
+    }
   })
 
   mainWindow.webContents.on('did-finish-load', () => {
@@ -70,23 +87,6 @@ app.on('ready', async () => {
       })
     }
   })
-
-  if (isDevelopment) {
-    // auto-open dev tools
-    // mainWindow.webContents.openDevTools()
-
-    // add inspect element on right click menu
-    mainWindow.webContents.on('context-menu', (e, props) => {
-      Menu.buildFromTemplate([
-        {
-          label: 'Inspect element',
-          click() {
-            mainWindow.inspectElement(props.x, props.y)
-          },
-        },
-      ]).popup(mainWindow)
-    })
-  }
 })
 
 app.whenReady().then(() => {

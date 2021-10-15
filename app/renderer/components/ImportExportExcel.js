@@ -10,7 +10,7 @@ const ImportExportExcel = () => {
   const [excelData, setExcelData] = useState('EMPTY')
 
   async function readExcel(file) {
-    new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const fileReader = new FileReader()
       fileReader.readAsArrayBuffer(file)
 
@@ -22,64 +22,80 @@ const ImportExportExcel = () => {
         const wsName = wb.SheetNames[0]
         const ws = wb.Sheets[wsName]
 
-        const data = XLSX.utils.sheet_to_json(ws, {
-          header: ['rm', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
-        })
+        let data = ''
 
-        if (!(data[0].rm > 0)) {
+        try {
           data = XLSX.utils.sheet_to_json(ws, {
-            header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'rm'],
+            header: ['id', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
           })
-        }
 
-        resolve(data)
+          const firstCell = data[0].id
+
+          if (!(firstCell > 0)) {
+            const newData = XLSX.utils.sheet_to_json(ws, {
+              header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'id'],
+            })
+            resolve(newData)
+          } else {
+            resolve(data)
+          }
+        } catch (error) {
+          console.log(error)
+          alert(error)
+        }
       }
 
       fileReader.onerror = (error) => {
+        alert(error)
         reject(error)
       }
     }).then((data) => {
       let alunos = []
 
-      data.forEach((element) => {
-        let serial = element.dataNasc
-        let datta = new Date(Date.UTC(0, 0, serial, -12))
-        // alert(JSON.stringify(datta, null, 2))
-
-        let dataString = datta.toLocaleDateString()
-        // alert(JSON.stringify(dataString, null, 2))
-        let day = dataString.substr(0, 2)
-        let month = dataString.substr(3, 2)
-        let year = dataString.substr(6, 4)
-
-        let dataFinal = day + month + year
-        // alert(JSON.stringify(dataFinal, null, 2))
-
-        let newData = { ...element, dataNasc: dataFinal }
-        // alert(JSON.stringify(newData, null, 2))
-
-        alunos.push(newData)
-      })
-
-      setExcelData(alunos)
-      // alert(JSON.stringify(alunos, null, 2))
-      alert(
-        'Leitura da planilha concluída! Dados prontos para serem importados.'
-      )
+      try {
+        data.forEach((element) => {
+          let serial = element.dataNasc
+          let data = new Date(Date.UTC(0, 0, serial, -12))
+          // console.log(JSON.stringify(data, null, 2))
+          let dataString = data.toLocaleDateString('pt')
+          // console.log(JSON.stringify(dataString, null, 2))
+          let day = dataString.substr(0, 2)
+          let month = dataString.substr(3, 2)
+          let year = dataString.substr(6, 4)
+          let dataFinal = day + month + year
+          // console.log(JSON.stringify(dataFinal, null, 2))
+          let newData = { ...element, dataNasc: dataFinal }
+          // console.log(JSON.stringify(newData, null, 2))
+          alunos.push(newData)
+        })
+        setExcelData(alunos)
+        // alert(JSON.stringify(alunos, null, 2))
+        alert(
+          'Leitura da planilha concluída! Dados prontos para serem importados.'
+        )
+      } catch (error) {
+        console.log(error)
+        alert(error)
+      }
     })
   }
 
   async function handleImport() {
     if (excelData !== 'EMPTY') {
+      const alunos = []
+
       await excelData.forEach((row) => {
-        // alert(JSON.stringify(row, null, 2))
-        let aluno = createAluno(row)
-        // alert(JSON.stringify(aluno, null, 2))
-        postAluno(aluno)
+        const aluno = createAluno(row)
+
+        // console.log('2- createAluno: ' + aluno[2])
+
+        alunos.push(...aluno)
       })
 
-      // setExcelData('EMPTY')
-      // document.getElementById('file').value = ''
+      postAluno(alunos)
+
+      setExcelData('EMPTY')
+      document.getElementById('file').value = ''
     } else {
       alert('Erro! Nenhum arquivo selecionado.')
     }
@@ -97,40 +113,45 @@ const ImportExportExcel = () => {
   }
 
   async function postAluno(aluno) {
+    // console.log('3- postAluno: ' + JSON.stringify(aluno, null, 2))
+
     await sendAsync('INSERT_EXCEL', aluno)
       .then((res) => {
-        if (res.includes('ra')) {
-          alert('Já existe esse RA no sistema. Favor, verificar.')
-        } else if (res.includes('rm')) {
-          alert('Já existe esse RM no sistema. Favor, verificar.')
-          // } else if (res.includes('ERROR')) {
-          // showMessage(res, 'Incluir Aluno', 'error')
-          // alert(res)
-        } else if (res.includes('OK')) {
-          alert('Dados inseridos com sucesso!')
+        if (res.includes('OK')) {
+          // alert('Dados inseridos com sucesso!')
+          console.log('Dados inseridos com sucesso!')
         } else {
-          alert(res)
+          alert('INSERT_EXCEL ERROR:\n' + JSON.stringify(res))
         }
       })
       .catch((err) => {
         alert(err.message)
+
+        if (err.message.includes('ra')) {
+          alert('Já existe esse RA no sistema. Favor, verificar.')
+        } else if (err.message.includes('id')) {
+          alert('Já existe esse RM no sistema. Favor, verificar.')
+          // } else if (res.includes('ERROR')) {
+          // showMessage(res, 'Incluir Aluno', 'error')
+          // alert(res)
+        }
       })
   }
 
   function createAluno(row) {
-    let nomeAlunoCapd = capitalize(row.nomeAluno)
-    let nomeAlunoNormd = normalize(nomeAlunoCapd)
-    let dataClean = String(row.dataNasc).replace(/\D+/g, '')
-    let raValue = treatRa(row.ra)
-    let nomeMaeCapd = capitalize(row.nomeMae)
-    let nomeMaeNormd = normalize(nomeMaeCapd)
+    const nomeAlunoCapd = capitalize(row.nomeAluno)
+    const nomeAlunoNormd = normalize(nomeAlunoCapd)
+    const dataClean = String(row.dataNasc).replace(/\D+/g, '')
+    const raValue = treatRa(row.ra)
+    const nomeMaeCapd = capitalize(row.nomeMae)
+    const nomeMaeNormd = normalize(nomeMaeCapd)
 
     return [
-      row.rm || null,
+      row.id || null,
       nomeAlunoCapd,
       nomeAlunoNormd,
       dataClean || '01011900',
-      raValue || row.rm,
+      raValue || row.id,
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',
     ]

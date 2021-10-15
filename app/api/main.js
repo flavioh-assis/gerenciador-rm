@@ -22,7 +22,7 @@ try {
 
   db.run(
     `CREATE TABLE IF NOT EXISTS "alunos" (
-    "rm"	INTEGER PRIMARY KEY AUTOINCREMENT,
+    "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
     "nomeAluno"	TEXT,
     "nomeAlunoNorm"	TEXT,
     "dataNasc"	TEXT,
@@ -71,30 +71,46 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'INSERT_EXCEL':
-      sql = `INSERT INTO
-        alunos (rm, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
-        VALUES(?, ?, ?, ?, ?, ?, ?)`
+      let valToInsert = values.splice(0, 994)
+      let nValToInsert = valToInsert.length / 7
 
-      try {
-        backupDB()
-      } catch (error) {
-        console.log(error)
-        event.reply('asynchronous-reply', error)
-      }
-      db.run(sql, values, (err) => {
-        if (err) console.log(err)
-        event.reply('asynchronous-reply', err && err.message) || 'OK'
-      })
+      const sqlInitial = `INSERT INTO
+      alunos (id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+      do {
+        sql = sqlInitial
+
+        for (let index = 1; index < nValToInsert; index++) {
+          sql += ', (?, ?, ?, ?, ?, ?, ?)'
+        }
+
+        try {
+          backupDB()
+
+          db.run(sql, valToInsert, (err) => {
+            if (err) console.log(err)
+            event.reply('asynchronous-reply', (err && err.message) || 'OK')
+          })
+        } catch (error) {
+          console.log(error)
+          event.reply('asynchronous-reply', error)
+        }
+
+        valToInsert = values.splice(0, 994)
+        nValToInsert = valToInsert.length / 7
+      } while (nValToInsert > 0)
+
       break
 
     case 'SELECT':
-      sql = `SELECT rm AS id, nomeAluno, nomeAlunoNorm, dataNasc, ra, nomeMae, nomeMaeNorm
-      FROM alunos
-      WHERE nomeAlunoNorm LIKE ?
-      AND dataNasc LIKE ?
-      AND ra LIKE ?
-      AND nomeMaeNorm LIKE ?
-      ORDER BY rm`
+      sql = `SELECT *
+        FROM alunos
+        WHERE nomeAlunoNorm LIKE ?
+        AND dataNasc LIKE ?
+        AND ra LIKE ?
+        AND nomeMaeNorm LIKE ?
+        ORDER BY id`
 
       db.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)
