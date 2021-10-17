@@ -5,7 +5,7 @@ import ImpExpExcel from '../components/ImportExportExcel'
 const Header = '../../app/assets/images/header_mvmi.png'
 
 export default () => {
-  const [isMainPage, setIsMainPage] = useState(true)
+  const [isMainPage, setIsMainPage] = useState(false)
 
   return (
     <div className='container'>

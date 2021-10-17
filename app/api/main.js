@@ -105,12 +105,22 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
 
     case 'SELECT':
       sql = `SELECT *
-        FROM alunos
-        WHERE nomeAlunoNorm LIKE ?
-        AND dataNasc LIKE ?
-        AND ra LIKE ?
-        AND nomeMaeNorm LIKE ?
-        ORDER BY id`
+          FROM alunos
+          WHERE nomeAlunoNorm LIKE ?
+          AND dataNasc LIKE ?
+          AND ra LIKE ?
+          AND nomeMaeNorm LIKE ?
+          ORDER BY id`
+
+      db.all(sql, values, (err, rows) => {
+        event.reply('asynchronous-reply', (err && err.message) || rows)
+      })
+      break
+
+    case 'SELECT_EXPORT':
+      sql = `SELECT id, nomeAluno, dataNasc, ra, nomeMae
+            FROM alunos
+            ORDER BY id`
 
       db.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)

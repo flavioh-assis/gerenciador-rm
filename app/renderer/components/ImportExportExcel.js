@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
-import * as XLSX from 'xlsx'
+import fs from 'fs'
+import { join, resolve } from 'path'
+import XLSX from 'xlsx'
 
 import sendAsync from '../../../app/api/renderer'
+import { stringify } from 'querystring'
 
 const IconExport = '../../app/assets/icons/icon-export.png'
 const IconImport = '../../app/assets/icons/icon-import.png'
@@ -55,8 +58,16 @@ const ImportExportExcel = () => {
       try {
         data.forEach((element) => {
           let serial = element.dataNasc
+          // console.log(serial)
+
           let data = new Date(Date.UTC(0, 0, serial, -12))
           // console.log(JSON.stringify(data, null, 2))
+          // console.log(data)
+
+          //->> convert date to serial <<-
+          // var returnDateTime = 25569.0 + ((data.getTime() - (data.getTimezoneOffset() * 60 * 1000)) / (1000 * 60 * 60 * 24));
+          // console.log(returnDateTime.toString().substr(0,5))
+
           let dataString = data.toLocaleDateString('pt')
           // console.log(JSON.stringify(dataString, null, 2))
           let day = dataString.substr(0, 2)
@@ -103,13 +114,70 @@ const ImportExportExcel = () => {
 
   function handleExport() {
     try {
-      sendAsync('SELECT').then((res) => {
+      sendAsync('SELECT_EXPORT').then((res) => {
         if (res.includes('ERROR')) {
           showMessage(res, 'Incluir Aluno', 'error')
         } else {
+          try {
+            const rootPath = process.cwd()
+            const fileDirPath = resolve(join(rootPath, '/Excel/'))
+
+            const year = new Date().getFullYear()
+            const mon = new Date().getMonth() + 1
+            const day = new Date().getDate()
+
+            const fileName = `RM ${year} - mês ${mon} dia ${day}.xlsx`
+
+            if (!fs.existsSync(fileDirPath)) {
+              fs.mkdirSync(fileDirPath)
+            }
+
+            const pathFile = resolve(join(fileDirPath, fileName))
+
+            // console.log(res);
+
+            // const resTest = [
+            //   [1, 'Flavio', '01012000', '1', 'Bete'],
+            //   [2, 'Flavio', '01012000', '2', 'Bete'],
+            //   [3, 'Flavio', '01012000', '3', 'Bete'],
+            //   [4, 'Flavio', '01012000', '4', 'Bete'],
+            // ]
+
+            // let idx = 0
+            // let alunos = []
+
+            // while (resTest.length > idx) {
+            //   alunos.push({
+            //     RM: resTest[idx],
+            //     Aluno: resTest[idx + 1],
+            //     Nasc: resTest[idx + 2],
+            //     RA: resTest[idx + 3],
+            //     Mãe: resTest[idx + 4],
+            //     })
+
+            //   idx += 5
+            // }
+            
+            const ws = XLSX.utils.json_to_sheet(res, {skipHeader: true})
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, ws, `1991 - ${year}`)
+            XLSX.writeFile(wb, pathFile)
+
+            // console.log(ws)
+            // console.log(wb)
+            console.log('Exportação concluída!')
+            alert('Exportação concluída!')
+
+          } catch (error) {
+            alert('Algo deu errado na exportação dos dados.')
+            console.log(error)
+          }
         }
       })
-    } catch (error) {}
+    } catch (error) {
+      alert('Erro em adquirir os dados!\n' + error)
+      console.log(error)
+    }
   }
 
   async function postAluno(aluno) {
@@ -227,7 +295,7 @@ const ImportExportExcel = () => {
           />
           <p>Importar</p>
         </button>
-        <button onClick={() => alert('Exportar')}>
+        <button onClick={handleExport}>
           <img
             src={IconExport}
             title='Exportar dados do sistema para uma planilha Excel'
