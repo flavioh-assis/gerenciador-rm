@@ -25,7 +25,7 @@ try {
     "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
     "nomeAluno"	TEXT,
     "nomeAlunoNorm"	TEXT,
-    "dataNasc"	TEXT,
+    "dataNasc"	DATE,
     "ra"	TEXT UNIQUE,
     "nomeMae"	TEXT,
     "nomeMaeNorm"	TEXT

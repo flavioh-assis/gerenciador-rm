@@ -42,7 +42,7 @@ export default () => {
       sortable: false,
       valueGetter: (params) => {
         const date = String(params.getValue('dataNasc'))
-        return applyMask(date, 'data')
+        return date.toLocaleDateString('pt')
       },
     },
     {
