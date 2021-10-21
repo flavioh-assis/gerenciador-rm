@@ -56,16 +56,21 @@ const ImportExportExcel = () => {
 
       try {
         data.forEach((element) => {
-          let readDate = String(element.dataNasc)
-
-          if (!readDate.includes('/')) {
-            let date = new Date(Date.UTC(0, 0, readDate, -12))
-
-            let dateString = date.toLocaleDateString('pt')
-
-            element = { ...element, dataNasc: dateString }
-          }
+          let readDate = element.dataNasc
           // console.log(JSON.stringify(element, null, 2))
+          // alert(readDate)
+          // console.log(readDate)
+
+          if (readDate) {
+            // console.log('if: '+ readDate)
+            if (!readDate.includes('/')) {
+              let date = new Date(Date.UTC(0, 0, readDate, -12))
+
+              let dateString = date.toLocaleDateString('pt')
+
+              element = { ...element, dataNasc: dateString }
+            }
+          }
           alunos.push(element)
         })
         setExcelData(alunos)
@@ -87,7 +92,7 @@ const ImportExportExcel = () => {
       await excelData.forEach((row) => {
         const aluno = createAluno(row)
 
-        // console.log('2- createAluno: ' + aluno[2])
+        console.log('2- createAluno: ' + aluno[3])
 
         alunos.push(...aluno)
       })
@@ -195,17 +200,21 @@ const ImportExportExcel = () => {
   }
 
   function createAluno(row) {
+    const id = row.id
     const nomeAlunoCapd = capitalize(row.nomeAluno)
     const nomeAlunoNormd = normalize(nomeAlunoCapd)
+    const dataNasc = row.dataNasc
     const raValue = treatRa(row.ra)
     const nomeMaeCapd = capitalize(row.nomeMae)
     const nomeMaeNormd = normalize(nomeMaeCapd)
 
+    console.log(row.dataNasc)
+
     return [
-      row.id || null,
+      id || null,
       nomeAlunoCapd,
       nomeAlunoNormd,
-      row.dataNasc || '01/01/1900',
+      dataNasc || '01/01/1900',
       raValue || row.id,
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',
