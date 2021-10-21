@@ -13,6 +13,7 @@ export default () => {
     '70:85:c2:77:72:c4', // linux eth
     '60:e3:27:24:fa:a7', // linux wifi
     'b8:97:5a:5e:b0:f1', // PC Sec Flavio
+    '30:9c:23:ab:d9:5d', // PC Sec Rose
   ]
   const columns = [
     {
@@ -35,15 +36,11 @@ export default () => {
     },
     {
       align: 'center',
-      field: 'dataMasked',
+      field: 'dataNasc',
       headerName: 'Data Nasc.',
       width: 140,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
-        const date = String(params.getValue('dataNasc'))
-        return date.toLocaleDateString('pt')
-      },
     },
     {
       align: 'center',
@@ -65,10 +62,6 @@ export default () => {
     },
     {
       field: 'id',
-      hide: true,
-    },
-    {
-      field: 'dataNasc',
       hide: true,
     },
     {
@@ -124,16 +117,16 @@ export default () => {
 
   function incluirAlunoHandler() {
     if (runApp) {
-      const dataClean = treatDataNasc(dados.dataNasc)
+      const data = dados.dataNasc
       const errorTitle = 'Erro ao Incluir Aluno'
 
-      if ([dados.nomeAluno, dataClean, dados.ra].includes('')) {
+      if ([dados.nomeAluno, data, dados.ra].includes('')) {
         showMessage(msgError.emptyFields, errorTitle, 'error')
-      } else if (!validateDateLength(dataClean)) {
+      } else if (!validateDateLength(data)) {
         showMessage(msgError.wrongDate, errorTitle, 'error')
       } else {
-        const month = parseInt(dataClean.substr(2, 2), 10)
-        const year = parseInt(dataClean.substr(4, 4), 10)
+        const month = parseInt(data.substr(2, 2), 10)
+        const year = parseInt(data.substr(4, 4), 10)
         const currentYear = new Date().getFullYear()
 
         if (year < 2000 || year > currentYear - 5) {
@@ -240,7 +233,7 @@ export default () => {
   function createQuestionMessage(values) {
     return `Confira os dados abaixo:
     Aluno: ${values[0]}
-    Nasc.:  ${applyMask(values[2], 'data')}
+    Nasc.:  ${values[2]}
     RA.:      ${applyMask(values[3], 'ra')}
     Mãe:    ${values[4] || 'NÃO INFORMADA'}\n
     Os dados estão corretos?`
@@ -250,7 +243,7 @@ export default () => {
     return [
       capitalize(dados.nomeAluno),
       normalize(dados.nomeAluno),
-      treatDataNasc(dados.dataNasc),
+      dados.dataNasc,
       treatRa(dados.ra),
       capitalize(dados.nomeMae),
       normalize(dados.nomeMae),
@@ -260,7 +253,7 @@ export default () => {
   function createValuesSelect(ra, aluno = '', nasc = '', mae = '') {
     return [
       `${normalize(aluno)}%`,
-      `${String(nasc).replace(/\D+/g, '')}%`,
+      `${nasc}%`,
       `${treatRa(ra)}%`,
       `${normalize(mae)}%`,
     ]
@@ -296,9 +289,6 @@ export default () => {
   //---------------------- TRANSFORMERS --------------------------
   function applyMask(value, type) {
     switch (type) {
-      case 'data':
-        return StringMask.apply(value, '00/00/0000')
-
       case 'ra':
         return StringMask.apply(value, '000.000.000-A', { reverse: true })
 
@@ -311,8 +301,7 @@ export default () => {
     //split the given string into an array of strings
     //whenever a blank space is encountered
 
-    let arr = text.replace('  ', ' ')
-    arr = text.split(' ')
+    let arr = text.split(' ')
 
     //loop through each element of the array and capitalize the first
     //letter if it have more than 2 chars. If it have less than that, all

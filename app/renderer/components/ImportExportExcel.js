@@ -4,7 +4,6 @@ import { join, resolve } from 'path'
 import XLSX from 'xlsx'
 
 import sendAsync from '../../../app/api/renderer'
-import { stringify } from 'querystring'
 
 const IconExport = '../../app/assets/icons/icon-export.png'
 const IconImport = '../../app/assets/icons/icon-import.png'
@@ -57,27 +56,17 @@ const ImportExportExcel = () => {
 
       try {
         data.forEach((element) => {
-          let serial = element.dataNasc
-          // console.log(serial)
+          let readDate = String(element.dataNasc)
 
-          let data = new Date(Date.UTC(0, 0, serial, -12))
-          // console.log(JSON.stringify(data, null, 2))
-          // console.log(data)
+          if (!readDate.includes('/')) {
+            let date = new Date(Date.UTC(0, 0, readDate, -12))
 
-          //->> convert date to serial <<-
-          // var returnDateTime = 25569.0 + ((data.getTime() - (data.getTimezoneOffset() * 60 * 1000)) / (1000 * 60 * 60 * 24));
-          // console.log(returnDateTime.toString().substr(0,5))
+            let dateString = date.toLocaleDateString('pt')
 
-          let dataString = data.toLocaleDateString('pt')
-          // console.log(JSON.stringify(dataString, null, 2))
-          let day = dataString.substr(0, 2)
-          let month = dataString.substr(3, 2)
-          let year = dataString.substr(6, 4)
-          let dataFinal = day + month + year
-          // console.log(JSON.stringify(dataFinal, null, 2))
-          let newData = { ...element, dataNasc: dataFinal }
-          // console.log(JSON.stringify(newData, null, 2))
-          alunos.push(newData)
+            element = { ...element, dataNasc: dateString }
+          }
+          // console.log(JSON.stringify(element, null, 2))
+          alunos.push(element)
         })
         setExcelData(alunos)
         // alert(JSON.stringify(alunos, null, 2))
@@ -157,8 +146,8 @@ const ImportExportExcel = () => {
 
             //   idx += 5
             // }
-            
-            const ws = XLSX.utils.json_to_sheet(res, {skipHeader: true})
+
+            const ws = XLSX.utils.json_to_sheet(res, { skipHeader: true })
             const wb = XLSX.utils.book_new()
             XLSX.utils.book_append_sheet(wb, ws, `1991 - ${year}`)
             XLSX.writeFile(wb, pathFile)
@@ -167,7 +156,6 @@ const ImportExportExcel = () => {
             // console.log(wb)
             console.log('Exportação concluída!')
             alert('Exportação concluída!')
-
           } catch (error) {
             alert('Algo deu errado na exportação dos dados.')
             console.log(error)
@@ -209,7 +197,6 @@ const ImportExportExcel = () => {
   function createAluno(row) {
     const nomeAlunoCapd = capitalize(row.nomeAluno)
     const nomeAlunoNormd = normalize(nomeAlunoCapd)
-    const dataClean = String(row.dataNasc).replace(/\D+/g, '')
     const raValue = treatRa(row.ra)
     const nomeMaeCapd = capitalize(row.nomeMae)
     const nomeMaeNormd = normalize(nomeMaeCapd)
@@ -218,7 +205,7 @@ const ImportExportExcel = () => {
       row.id || null,
       nomeAlunoCapd,
       nomeAlunoNormd,
-      dataClean || '01011900',
+      row.dataNasc || '01/01/1900',
       raValue || row.id,
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',
