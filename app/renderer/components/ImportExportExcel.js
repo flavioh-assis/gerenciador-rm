@@ -14,39 +14,45 @@ const ImportExportExcel = () => {
   async function readExcel(file) {
     await new Promise((resolve, reject) => {
       const fileReader = new FileReader()
-      fileReader.readAsArrayBuffer(file)
 
-      fileReader.onload = (e) => {
-        const bufferArray = e.target.result
+      try {
+        fileReader.readAsArrayBuffer(file)
 
-        const wb = XLSX.read(bufferArray, { type: 'buffer' })
+        fileReader.onload = (e) => {
+          const bufferArray = e.target.result
 
-        const wsName = wb.SheetNames[0]
-        const ws = wb.Sheets[wsName]
+          const wb = XLSX.read(bufferArray, { type: 'buffer' })
 
-        let data = ''
+          const wsName = wb.SheetNames[0]
+          const ws = wb.Sheets[wsName]
 
-        try {
-          data = XLSX.utils.sheet_to_json(ws, {
-            header: ['id', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
-          })
+          let data = ''
 
-          const firstCell = data[0].id
-
-          if (!(firstCell > 0)) {
-            const newData = XLSX.utils.sheet_to_json(ws, {
-              header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'id'],
+          try {
+            data = XLSX.utils.sheet_to_json(ws, {
+              header: ['id', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
             })
-            resolve(newData)
-          } else {
-            resolve(data)
-          }
-        } catch (error) {
-          console.log(error)
-          alert(error)
-        }
-      }
 
+            const firstCell = data[0].id
+
+            if (!(firstCell > 0)) {
+              const newData = XLSX.utils.sheet_to_json(ws, {
+                header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'id'],
+              })
+              resolve(newData)
+            } else {
+              resolve(data)
+            }
+          } catch (error) {
+            console.log(error)
+            alert(error)
+          }
+        }
+      } catch (error) {
+        console.log('Nenhum arquivo selecionado!')
+        setExcelData('EMPTY')
+        document.getElementById('file').value = ''
+      }
       fileReader.onerror = (error) => {
         alert(error)
         reject(error)
@@ -63,7 +69,7 @@ const ImportExportExcel = () => {
 
           if (readDate) {
             // console.log('if: '+ readDate)
-            if (!readDate.includes('/')) {
+            if (!String(readDate).includes('/')) {
               let date = new Date(Date.UTC(0, 0, readDate, -12))
 
               let dateString = date.toLocaleDateString('pt')
@@ -92,7 +98,7 @@ const ImportExportExcel = () => {
       await excelData.forEach((row) => {
         const aluno = createAluno(row)
 
-        console.log('2- createAluno: ' + aluno[3])
+        // console.log('2- createAluno: ' + aluno[3])
 
         alunos.push(...aluno)
       })

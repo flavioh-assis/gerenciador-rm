@@ -123,10 +123,11 @@ export default () => {
       if ([dados.nomeAluno, data, dados.ra].includes('')) {
         showMessage(msgError.emptyFields, errorTitle, 'error')
       } else if (!validateDateLength(data)) {
+        console.log(data)
         showMessage(msgError.wrongDate, errorTitle, 'error')
       } else {
-        const month = parseInt(data.substr(2, 2), 10)
-        const year = parseInt(data.substr(4, 4), 10)
+        const month = parseInt(data.substr(3, 2), 10)
+        const year = parseInt(data.substr(6, 4), 10)
         const currentYear = new Date().getFullYear()
 
         if (year < 2000 || year > currentYear - 5) {
@@ -145,6 +146,7 @@ export default () => {
 
           const msg = createQuestionMessage(values)
 
+          console.log(values);
           showMessage(msg, 'Incluir Aluno(a)', 'question', values)
         }
       }
@@ -240,13 +242,16 @@ export default () => {
   }
 
   function createValuesPost() {
+    const aluno = capitalize(dados.nomeAluno)
+    const mae = capitalize(dados.nomeMae) || 'NÃO INFORMADO'
+
     return [
-      capitalize(dados.nomeAluno),
-      normalize(dados.nomeAluno),
+      aluno,
+      normalize(aluno),
       dados.dataNasc,
       treatRa(dados.ra),
-      capitalize(dados.nomeMae),
-      normalize(dados.nomeMae),
+      mae,
+      normalize(mae),
     ]
   }
 
@@ -300,13 +305,14 @@ export default () => {
   function capitalize(text) {
     //split the given string into an array of strings
     //whenever a blank space is encountered
+    let arr = String(text).split(' ')
 
-    let arr = text.split(' ')
+    // remove empty strings from array
+    arr = arr.filter(item => item)
 
     //loop through each element of the array and capitalize the first
     //letter if it have more than 2 chars. If it have less than that, all
     //letters will go to lower case
-
     const textCapitalized = []
 
     arr.forEach((word) => {
@@ -333,10 +339,6 @@ export default () => {
       .toLowerCase()
   }
 
-  function treatDataNasc(value) {
-    return String(value).replace(/\D+/g, '')
-  }
-
   function treatRa(value) {
     return String(value).replace(/[\W_]/g, '').toUpperCase()
   }
@@ -349,7 +351,7 @@ export default () => {
   }
 
   function validateDateLength(date) {
-    return RegExp(/\d{8}/g).test(date)
+    return RegExp(/[\w\/]{10}/g).test(date)
   }
 
   return (
