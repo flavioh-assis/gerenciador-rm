@@ -180,29 +180,22 @@ const ImportExportExcel = () => {
   }
 
   async function postAluno(aluno) {
-    // console.log('3- postAluno: ' + JSON.stringify(aluno, null, 2))
+    await sendAsync('INSERT_EXCEL', aluno).then((res) => {
+      if (res.includes('OK')) {
+        alert('Dados inseridos com sucesso!')
+      } else {
+        console.log('INSERT_EXCEL: ' + res)
 
-    await sendAsync('INSERT_EXCEL', aluno)
-      .then((res) => {
-        if (res.includes('OK')) {
-          // alert('Dados inseridos com sucesso!')
-          console.log('Dados inseridos com sucesso!')
-        } else {
-          alert('INSERT_EXCEL ERROR:\n' + JSON.stringify(res))
-        }
-      })
-      .catch((err) => {
-        alert(err.message)
-
-        if (err.message.includes('ra')) {
+        if (res.includes('alunos.ra')) {
           alert('Já existe esse RA no sistema. Favor, verificar.')
-        } else if (err.message.includes('id')) {
+        } else if (res.includes('alunos.id')) {
           alert('Já existe esse RM no sistema. Favor, verificar.')
-          // } else if (res.includes('ERROR')) {
+        } else {
           // showMessage(res, 'Incluir Aluno', 'error')
-          // alert(res)
+          alert(res)
         }
-      })
+      }
+    })
   }
 
   function createAluno(row) {
@@ -214,13 +207,11 @@ const ImportExportExcel = () => {
     const nomeMaeCapd = capitalize(row.nomeMae)
     const nomeMaeNormd = normalize(nomeMaeCapd)
 
-    console.log(row.dataNasc)
-
     return [
       id || null,
       nomeAlunoCapd,
       nomeAlunoNormd,
-      dataNasc || '01/01/1900',
+      dataNasc || '00/00/0000',
       raValue || row.id,
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',

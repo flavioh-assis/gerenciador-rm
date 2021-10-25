@@ -47,6 +47,22 @@ function backupDB() {
   fs.copyFileSync(pathDB, pathBackup)
 }
 
+function getLastId() {
+  let res = ''
+  const sql = `SELECT id
+      FROM alunos
+      ORDER BY id
+      DESC LIMIT 1`
+
+  db.all(sql, (err, lastID) => {
+    res = err || lastID
+    console.log('res:');
+    console.log(res);
+  })
+
+  return res
+}
+
 ipcMain.on('asynchronous-message', (event, option, values) => {
   let sql = ''
 
@@ -71,6 +87,18 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'INSERT_EXCEL':
+      // let result = {
+      //   status: 'initial',
+      //   values: []
+      // }
+
+      // const lastIdDB = getLastId()
+      // console.log('lastIdDB');
+      // console.log(lastIdDB);
+      // const firstID = Number(lastIdDB) + 1
+      // console.log('firstID:');
+      // console.log(firstID);
+
       let valToInsert = values.splice(0, 994)
       let nValToInsert = valToInsert.length / 7
 
@@ -88,8 +116,11 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         try {
           backupDB()
 
-          db.run(sql, valToInsert, (err) => {
+          db.run(sql, valToInsert, (err, rows) => {
             if (err) console.log(err)
+            console.log(lastID);
+            // else getLastId(event)
+            
             event.reply('asynchronous-reply', (err && err.message) || 'OK')
           })
         } catch (error) {
