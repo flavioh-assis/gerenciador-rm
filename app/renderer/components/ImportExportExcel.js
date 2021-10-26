@@ -180,11 +180,23 @@ const ImportExportExcel = () => {
   }
 
   async function postAluno(aluno) {
+    let insertedIDs = []
+    let error = false
+
+    await sendAsync('GET_LAST_ID').then((id) => {
+      // console.log('GET_LAST_ID first: ' + id)
+      insertedIDs.push(id + 1)
+    })
+
     await sendAsync('INSERT_EXCEL', aluno).then((res) => {
+      // alert(JSON.stringify(res, null, 2))
+
       if (res.includes('OK')) {
-        alert('Dados inseridos com sucesso!')
+        // alert('Dados inseridos com sucesso!')
+        console.log('Dados inseridos com sucesso!')
       } else {
-        console.log('INSERT_EXCEL: ' + res)
+        console.log('ERROR_INSERT_EXCEL: ' + res)
+        error = true
 
         if (res.includes('alunos.ra')) {
           alert('Já existe esse RA no sistema. Favor, verificar.')
@@ -193,9 +205,22 @@ const ImportExportExcel = () => {
         } else {
           // showMessage(res, 'Incluir Aluno', 'error')
           alert(res)
+          // console.log(res)
         }
       }
     })
+
+    if (!error) {
+      await sendAsync('GET_LAST_ID').then((id) => {
+        // console.log('GET_LAST_ID last: ' + id)
+        insertedIDs.push(id)
+      })
+
+      let msg = `Alunos incluídos com sucesso!\n`
+      msg += `RM's gerados seguindo a ordem da planilha: do ${insertedIDs[0]} ao ${insertedIDs[1]}.`
+
+      alert(msg)
+    }
   }
 
   function createAluno(row) {
@@ -219,7 +244,7 @@ const ImportExportExcel = () => {
   }
 
   function capitalize(text) {
-    if (text) {
+    if (text && text !== 'NÃO INFORMADO') {
       let arr = [String(text).replace('  ', ' ')]
       arr = String(text).split(' ')
 

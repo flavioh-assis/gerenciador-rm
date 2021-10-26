@@ -26,7 +26,7 @@ try {
     "nomeAluno"	TEXT,
     "nomeAlunoNorm"	TEXT,
     "dataNasc"	TEXT,
-    "ra"	TEXT,
+    "ra"  TEXT UNIQUE,
     "nomeMae"	TEXT,
     "nomeMaeNorm"	TEXT
     );`
@@ -47,26 +47,27 @@ function backupDB() {
   fs.copyFileSync(pathDB, pathBackup)
 }
 
-function getLastId() {
-  let res = ''
-  const sql = `SELECT id
-      FROM alunos
-      ORDER BY id
-      DESC LIMIT 1`
-
-  db.all(sql, (err, lastID) => {
-    res = err || lastID
-    console.log('res:');
-    console.log(res);
-  })
-
-  return res
-}
-
-ipcMain.on('asynchronous-message', (event, option, values) => {
+ipcMain.on('asynchronous-message', async (event, option, values) => {
   let sql = ''
 
   switch (option) {
+    case 'GET_LAST_ID':
+      // sql = `SELECT id
+      //     FROM alunos
+      //     ORDER BY id
+      //     DESC LIMIT 1`
+
+      sql = `SELECT count(id)
+          FROM alunos`
+
+      db.all(sql, (err, last) => {
+        // console.log(last)
+        const res = err || last[0]['count(id)'] || 0
+        event.reply('asynchronous-reply', res)
+      })
+
+      break
+
     case 'INSERT':
       const insertedMsg = 'Aluno inserido com sucesso.'
 
@@ -87,18 +88,6 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       break
 
     case 'INSERT_EXCEL':
-      // let result = {
-      //   status: 'initial',
-      //   values: []
-      // }
-
-      // const lastIdDB = getLastId()
-      // console.log('lastIdDB');
-      // console.log(lastIdDB);
-      // const firstID = Number(lastIdDB) + 1
-      // console.log('firstID:');
-      // console.log(firstID);
-
       let valToInsert = values.splice(0, 994)
       let nValToInsert = valToInsert.length / 7
 
@@ -107,7 +96,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)`
 
       do {
-        sql = sqlInitial
+        let sql = sqlInitial
 
         for (let index = 1; index < nValToInsert; index++) {
           sql += ', (?, ?, ?, ?, ?, ?, ?)'
@@ -116,16 +105,19 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         try {
           backupDB()
 
-          db.run(sql, valToInsert, (err, rows) => {
-            if (err) console.log(err)
-            console.log(lastID);
-            // else getLastId(event)
-            
-            event.reply('asynchronous-reply', (err && err.message) || 'OK')
+          db.run(sql, valToInsert, (err) => {
+            if (err) {
+              console.log(err)
+
+              event.reply('asynchronous-reply', err && err.message)
+              return
+            }
+            event.reply('asynchronous-reply', 'OK')
           })
         } catch (error) {
           console.log(error)
           event.reply('asynchronous-reply', error)
+          return
         }
 
         valToInsert = values.splice(0, 994)

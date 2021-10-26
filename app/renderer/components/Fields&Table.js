@@ -80,7 +80,8 @@ export default () => {
     emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenhidos.`,
     macNotAuthorized:
       'Esse computador não está autorizado para o uso do sistema ou está sem acesso à internet.',
-    unique: 'Já existe esse R.A. no sistema.',
+    uniqueRA: 'Já existe esse RA no sistema.',
+    uniqueRM: 'Já existe esse RM no sistema.',
     wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
     wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
     wrongMonth: 'O MÊS da DATA DE NASCIMENTO está incorreto.',
@@ -146,7 +147,6 @@ export default () => {
 
           const msg = createQuestionMessage(values)
 
-          console.log(values);
           showMessage(msg, 'Incluir Aluno(a)', 'question', values)
         }
       }
@@ -202,9 +202,11 @@ export default () => {
   //---------------------- DATABASE QUERIES --------------------------
   function postAluno(values, title) {
     sendAsync('INSERT', values).then((res) => {
-      if (res.includes('UNIQUE')) {
-        alert(res)
-        const errorMsg = `${msgError.unique} ${msgError.correction}`
+      if (res.includes('alunos.ra')) {
+        const errorMsg = `${msgError.uniqueRA} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('alunos.id')) {
+        const errorMsg = `${msgError.uniqueRM} ${msgError.correction}`
         showMessage(errorMsg, title, 'error')
       } else if (res.includes('ERROR')) {
         showMessage(res, title, 'error')
