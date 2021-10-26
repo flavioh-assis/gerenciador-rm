@@ -13,7 +13,11 @@ dist/
 dist-assets/
 out/
 
-Banco de Dados/
+# database
+*.sqlite3
+
+# Excel sheets
+Excel/
 
 .DS_Store
 .env
@@ -79,16 +83,5 @@ ts-gen
 # Used to accelerate builds after sync
 patches/mtime-cache.json
 
-# database
-app/api/database/db_rel_freq.sqlite3
-*.sqlite3
-
 #build
-build
 build/
-/build/
-build/main/index.js
-build/renderer/index.js
-build/renderer/index.html
-build/renderer/app.js
-build/renderer/pages/Main.js
