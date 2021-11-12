@@ -4,7 +4,7 @@ import { join, resolve } from 'path'
 const { Database } = require('sqlite3').verbose()
 
 const rootPath = process.cwd()
-const dbDirPath = resolve(join(rootPath, '/Banco_de_Dados/'))
+const dbDirPath = resolve(join(rootPath, '/_Banco_de_Dados/'))
 const dbName = 'db_rm.sqlite3'
 
 let db = ''
@@ -36,7 +36,7 @@ try {
 }
 
 function backupDB() {
-  const pathDirBackup = resolve(join(dbDirPath, 'Backup/'))
+  const pathDirBackup = resolve(join(dbDirPath, '_Backup/'))
 
   if (!fs.existsSync(pathDirBackup)) {
     fs.mkdirSync(pathDirBackup)

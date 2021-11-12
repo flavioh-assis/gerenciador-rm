@@ -184,7 +184,7 @@ const ImportExportExcel = () => {
     let error = false
 
     await sendAsync('GET_LAST_ID').then((id) => {
-      // console.log('GET_LAST_ID first: ' + id)
+      console.log('GET_LAST_ID first: ' + id)
       insertedIDs.push(id + 1)
     })
 
@@ -212,7 +212,7 @@ const ImportExportExcel = () => {
 
     if (!error) {
       await sendAsync('GET_LAST_ID').then((id) => {
-        // console.log('GET_LAST_ID last: ' + id)
+        console.log('GET_LAST_ID last: ' + id)
         insertedIDs.push(id)
       })
 
