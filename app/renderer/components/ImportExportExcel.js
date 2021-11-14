@@ -2,9 +2,9 @@ import React, { useState } from 'react'
 import fs from 'fs'
 import { join, resolve } from 'path'
 import XLSX from 'xlsx'
+const { dialog } = require('electron').remote
 
 import sendAsync from '../../../app/api/renderer'
-
 const IconExport = '../../app/assets/icons/icon-export.png'
 const IconImport = '../../app/assets/icons/icon-import.png'
 
@@ -18,7 +18,7 @@ const ImportExportExcel = () => {
       try {
         fileReader.readAsArrayBuffer(file)
 
-        fileReader.onload = (e) => {
+        fileReader.onload = e => {
           const bufferArray = e.target.result
 
           const wb = XLSX.read(bufferArray, { type: 'buffer' })
@@ -45,7 +45,7 @@ const ImportExportExcel = () => {
             }
           } catch (error) {
             console.log(error)
-            alert(error)
+            showMessage(error, 'Importar Excel', 'error')
           }
         }
       } catch (error) {
@@ -53,22 +53,18 @@ const ImportExportExcel = () => {
         setExcelData('EMPTY')
         document.getElementById('file').value = ''
       }
-      fileReader.onerror = (error) => {
-        alert(error)
+      fileReader.onerror = error => {
+        showMessage(error, 'Importar Excel', 'error')
         reject(error)
       }
-    }).then((data) => {
+    }).then(data => {
       let alunos = []
 
       try {
-        data.forEach((element) => {
+        data.forEach(element => {
           let readDate = element.dataNasc
-          // console.log(JSON.stringify(element, null, 2))
-          // alert(readDate)
-          // console.log(readDate)
 
           if (readDate) {
-            // console.log('if: '+ readDate)
             if (!String(readDate).includes('/')) {
               let date = new Date(Date.UTC(0, 0, readDate, -12))
 
@@ -80,13 +76,18 @@ const ImportExportExcel = () => {
           alunos.push(element)
         })
         setExcelData(alunos)
-        // alert(JSON.stringify(alunos, null, 2))
-        alert(
-          'Leitura da planilha concluída! Dados prontos para serem importados.'
+        showMessage(
+          'Leitura da planilha concluída! Dados prontos para serem importados.',
+          'Importar Excel',
+          'info'
         )
       } catch (error) {
         console.log(error)
-        alert(error)
+        showMessage(
+          error,
+          'Importar Excel',
+          'error'
+        )
       }
     })
   }
@@ -95,10 +96,8 @@ const ImportExportExcel = () => {
     if (excelData !== 'EMPTY') {
       const alunos = []
 
-      await excelData.forEach((row) => {
+      await excelData.forEach(row => {
         const aluno = createAluno(row)
-
-        // console.log('2- createAluno: ' + aluno[3])
 
         alunos.push(...aluno)
       })
@@ -108,25 +107,29 @@ const ImportExportExcel = () => {
       setExcelData('EMPTY')
       document.getElementById('file').value = ''
     } else {
-      alert('Erro! Nenhum arquivo selecionado.')
+      showMessage(
+        'Erro! Nenhum arquivo selecionado.',
+        'Importar Excel',
+        'error'
+      )
     }
   }
 
   function handleExport() {
     try {
-      sendAsync('SELECT_EXPORT').then((res) => {
+      sendAsync('SELECT_EXPORT').then(res => {
         if (res.includes('ERROR')) {
           showMessage(res, 'Incluir Aluno', 'error')
         } else {
           try {
             const rootPath = process.cwd()
-            const fileDirPath = resolve(join(rootPath, '/Excel/'))
+            const fileDirPath = resolve(join(rootPath, '/_Excel/'))
 
             const year = new Date().getFullYear()
             const mon = new Date().getMonth() + 1
             const day = new Date().getDate()
 
-            const fileName = `RM ${year} - mês ${mon} dia ${day}.xlsx`
+            const fileName = `RM ${year} - ${day}-${mon}.xlsx`
 
             if (!fs.existsSync(fileDirPath)) {
               fs.mkdirSync(fileDirPath)
@@ -134,48 +137,34 @@ const ImportExportExcel = () => {
 
             const pathFile = resolve(join(fileDirPath, fileName))
 
-            // console.log(res);
-
-            // const resTest = [
-            //   [1, 'Flavio', '01012000', '1', 'Bete'],
-            //   [2, 'Flavio', '01012000', '2', 'Bete'],
-            //   [3, 'Flavio', '01012000', '3', 'Bete'],
-            //   [4, 'Flavio', '01012000', '4', 'Bete'],
-            // ]
-
-            // let idx = 0
-            // let alunos = []
-
-            // while (resTest.length > idx) {
-            //   alunos.push({
-            //     RM: resTest[idx],
-            //     Aluno: resTest[idx + 1],
-            //     Nasc: resTest[idx + 2],
-            //     RA: resTest[idx + 3],
-            //     Mãe: resTest[idx + 4],
-            //     })
-
-            //   idx += 5
-            // }
-
             const ws = XLSX.utils.json_to_sheet(res, { skipHeader: true })
             const wb = XLSX.utils.book_new()
             XLSX.utils.book_append_sheet(wb, ws, `1991 - ${year}`)
             XLSX.writeFile(wb, pathFile)
 
-            // console.log(ws)
-            // console.log(wb)
             console.log('Exportação concluída!')
-            alert('Exportação concluída!')
+            showMessage(
+              'Exportação concluída!',
+              'Exportar Excel',
+              'error'
+            )
           } catch (error) {
-            alert('Algo deu errado na exportação dos dados.')
+            showMessage(
+              'Algo deu errado na exportação dos dados.',
+              'Exportar Excel',
+              'error'
+            )
             console.log(error)
           }
         }
       })
     } catch (error) {
-      alert('Erro em adquirir os dados!\n' + error)
-      console.log(error)
+      showMessage(
+        'Erro em adquirir os dados!\n' + error,
+        'Exportar Excel',
+        'error'
+      )
+      console.log(error);
     }
   }
 
@@ -183,43 +172,53 @@ const ImportExportExcel = () => {
     let insertedIDs = []
     let error = false
 
-    await sendAsync('GET_LAST_ID').then((id) => {
-      console.log('GET_LAST_ID first: ' + id)
+    await sendAsync('GET_LAST_ID').then(id => {
       insertedIDs.push(id + 1)
     })
 
-    await sendAsync('INSERT_EXCEL', aluno).then((res) => {
-      // alert(JSON.stringify(res, null, 2))
-
+    await sendAsync('INSERT_EXCEL', aluno).then(res => {
       if (res.includes('OK')) {
-        // alert('Dados inseridos com sucesso!')
         console.log('Dados inseridos com sucesso!')
       } else {
         console.log('ERROR_INSERT_EXCEL: ' + res)
         error = true
 
         if (res.includes('alunos.ra')) {
-          alert('Já existe esse RA no sistema. Favor, verificar.')
+          showMessage(
+            'Já existe esse RA no sistema. Favor, verificar.',
+            'Importar Excel',
+            'error'
+          )
         } else if (res.includes('alunos.id')) {
-          alert('Já existe esse RM no sistema. Favor, verificar.')
+          showMessage(
+            'Já existe esse RM no sistema. Favor, verificar.',
+            'Importar Excel',
+            'error'
+          )
         } else {
-          // showMessage(res, 'Incluir Aluno', 'error')
-          alert(res)
-          // console.log(res)
+          showMessage(
+            res,
+            'Importar Excel',
+            'error'
+          )
+          console.log(res)
         }
       }
     })
 
     if (!error) {
-      await sendAsync('GET_LAST_ID').then((id) => {
-        console.log('GET_LAST_ID last: ' + id)
+      await sendAsync('GET_LAST_ID').then(id => {
         insertedIDs.push(id)
       })
 
       let msg = `Alunos incluídos com sucesso!\n`
       msg += `RM's gerados seguindo a ordem da planilha: do ${insertedIDs[0]} ao ${insertedIDs[1]}.`
 
-      alert(msg)
+      showMessage(
+        msg,
+        'Importar Excel',
+        'error'
+      )
     }
   }
 
@@ -250,7 +249,7 @@ const ImportExportExcel = () => {
 
       let textCapitalized = []
 
-      arr.forEach((word) => {
+      arr.forEach(word => {
         if (
           word.length > 2 &&
           !RegExp(/\bdas\b|\bdos\b/g).test(word.toLowerCase())
@@ -284,7 +283,7 @@ const ImportExportExcel = () => {
       let array = String(ra).split('')
       let newArray = []
 
-      array.forEach((letter) => {
+      array.forEach(letter => {
         if (!letter.includes('0') || addZero) {
           newArray.push(letter)
 
@@ -299,6 +298,33 @@ const ImportExportExcel = () => {
         .toUpperCase()
     }
     return null
+  }
+
+  function showMessage(message, title, type, values = '') {
+    if (type === 'question') {
+      dialog
+        .showMessageBox({
+          buttons: ['SIM', 'NÃO'],
+          cancelId: 1,
+          defaultId: 0,
+          message,
+          title,
+          type,
+        })
+        .then(res => {
+          if (res.response == 0) {
+            // SIM
+            postAluno(values, title)
+          }
+        })
+    } else {
+      dialog.showMessageBoxSync({
+        message,
+        title,
+        type,
+        buttons: ['OK'],
+      })
+    }
   }
 
   return (
@@ -327,7 +353,7 @@ const ImportExportExcel = () => {
         title='Clique para selecionar a planilha'
         id='file'
         type='file'
-        onChange={(e) => {
+        onChange={e => {
           let selFile = e.target.files[0]
           readExcel(selFile)
         }}

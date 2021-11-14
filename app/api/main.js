@@ -4,7 +4,7 @@ import { join, resolve } from 'path'
 const { Database } = require('sqlite3').verbose()
 
 const rootPath = process.cwd()
-const dbDirPath = resolve(join(rootPath, '/_Banco_de_Dados/'))
+const dbDirPath = resolve(join(rootPath, '/_Banco de Dados/'))
 const dbName = 'db_rm.sqlite3'
 
 let db = ''
@@ -16,7 +16,7 @@ try {
   }
   pathDB = resolve(join(dbDirPath, dbName))
 
-  db = new Database(pathDB, (err) => {
+  db = new Database(pathDB, err => {
     if (err) console.error('Database opening error: ', err)
   })
 
@@ -36,7 +36,7 @@ try {
 }
 
 function backupDB() {
-  const pathDirBackup = resolve(join(dbDirPath, '_Backup/'))
+  const pathDirBackup = resolve(join(dbDirPath, 'Backup/'))
 
   if (!fs.existsSync(pathDirBackup)) {
     fs.mkdirSync(pathDirBackup)
@@ -52,16 +52,10 @@ ipcMain.on('asynchronous-message', async (event, option, values) => {
 
   switch (option) {
     case 'GET_LAST_ID':
-      // sql = `SELECT id
-      //     FROM alunos
-      //     ORDER BY id
-      //     DESC LIMIT 1`
-
       sql = `SELECT count(id)
           FROM alunos`
 
       db.all(sql, (err, last) => {
-        // console.log(last)
         const res = err || last[0]['count(id)'] || 0
         event.reply('asynchronous-reply', res)
       })
@@ -78,10 +72,11 @@ ipcMain.on('asynchronous-message', async (event, option, values) => {
       try {
         backupDB()
 
-        db.run(sql, values, (err) => {
+        db.run(sql, values, err => {
           event.reply('asynchronous-reply', (err && err.message) || insertedMsg)
         })
       } catch (error) {
+        console.log(error.message)
         event.reply('asynchronous-reply', error.message)
       }
 
@@ -105,19 +100,20 @@ ipcMain.on('asynchronous-message', async (event, option, values) => {
         try {
           backupDB()
 
-          db.run(sql, valToInsert, (err) => {
+          db.run(sql, valToInsert, err => {
             if (err) {
               console.log(err)
 
               event.reply('asynchronous-reply', err && err.message)
-              return
+              console.log('ERROR')
+              return 'ERROR'
             }
             event.reply('asynchronous-reply', 'OK')
           })
         } catch (error) {
           console.log(error)
-          event.reply('asynchronous-reply', error)
-          return
+          event.reply('asynchronous-reply', error.message)
+          return 'ERROR'
         }
 
         valToInsert = values.splice(0, 994)

@@ -23,7 +23,7 @@ export default () => {
       width: 89,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
+      valueGetter: params => {
         const rm = String(params.getValue('id'))
         return applyMask(rm, 'rm')
       },
@@ -49,7 +49,7 @@ export default () => {
       width: 160,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
+      valueGetter: params => {
         const ra = String(params.getValue('ra'))
         return applyMask(ra, 'ra')
       },
@@ -98,11 +98,11 @@ export default () => {
   const [runApp, setRunApp] = useState(false)
 
   useEffect(() => {
-    MacAddress.all().then((networks) => {
+    MacAddress.all().then(networks => {
       const networksName = Object.keys(networks)
 
-      networksName.forEach((netName) => {
-        authorizedMACs.forEach((mac) => {
+      networksName.forEach(netName => {
+        authorizedMACs.forEach(mac => {
           if (mac === networks[netName]['mac']) {
             setRunApp(true)
           }
@@ -112,11 +112,11 @@ export default () => {
   })
 
   //---------------------- HANDLERS --------------------------
-  function clearFieldsHandler() {
+  function handleClearFields() {
     setDados(initialDados)
   }
 
-  function incluirAlunoHandler() {
+  function handleIncluirAluno() {
     if (runApp) {
       const data = dados.dataNasc
       const errorTitle = 'Erro ao Incluir Aluno'
@@ -155,35 +155,7 @@ export default () => {
     }
   }
 
-  function incluirAlunoExcelHandler() {
-    const dictPath = process.cwd()
-    const fileName = 'RM_2020_base.xlsx'
-    const filePath = `${dictPath}/${fileName}`
-
-    readXlsxFile(filePath).then((rows) => {
-      rows.forEach((row, index) => {
-        const norm = normalize(row)
-        const newRa = parseInt(index + 1, 10)
-
-        const values = [
-          `${newRa}`,
-          `${row}`,
-          norm,
-          '00000000',
-          `${treatRa(newRa)}`,
-          '',
-          '',
-        ]
-        sendAsync('INSERT_EXCEL', values).then((res) => {
-          if (res.includes('ERROR')) {
-            showMessage(res, 'Incuir Aluno', 'error')
-          }
-        })
-      })
-    })
-  }
-
-  function searchAlunoHandler() {
+  function handleSearchAluno() {
     if (runApp) {
       const values = createValuesSelect(
         dados.ra,
@@ -199,41 +171,7 @@ export default () => {
     }
   }
 
-  //---------------------- DATABASE QUERIES --------------------------
-  function postAluno(values, title) {
-    sendAsync('INSERT', values).then((res) => {
-      if (res.includes('alunos.ra')) {
-        const errorMsg = `${msgError.uniqueRA} ${msgError.correction}`
-        showMessage(errorMsg, title, 'error')
-      } else if (res.includes('alunos.id')) {
-        const errorMsg = `${msgError.uniqueRM} ${msgError.correction}`
-        showMessage(errorMsg, title, 'error')
-      } else if (res.includes('ERROR')) {
-        showMessage(res, title, 'error')
-      } else {
-        selectAlunos(createValuesSelect(dados.ra))
-        showMessage(res, title, 'info')
-        clearFieldsHandler()
-      }
-    })
-  }
-
-  function selectAlunos(values) {
-    const msgTitle = 'Pesquisar Aluno'
-
-    sendAsync('SELECT', values).then((resp) => {
-      if (resp.includes('ERROR')) {
-        showMessage(resp, msgTitle, 'error')
-      } else {
-        if (resp.length === 0) {
-          showMessage('Nenhum aluno encontrado!', msgTitle, 'info')
-        }
-        setAlunos(resp)
-      }
-    })
-  }
-
-  //---------------------- CREATORS --------------------------
+  //---------------------- CREATORS creators--------------------------
   function createQuestionMessage(values) {
     return `Confira os dados abaixo:
     Aluno: ${values[0]}
@@ -261,7 +199,7 @@ export default () => {
     return [
       `${normalize(aluno)}%`,
       `${nasc}%`,
-      `${treatRa(ra)}%`,
+      `%${treatRa(ra)}`,
       `${normalize(mae)}%`,
     ]
   }
@@ -277,7 +215,7 @@ export default () => {
           title,
           type,
         })
-        .then((res) => {
+        .then(res => {
           if (res.response == 0) {
             // SIM
             postAluno(values, title)
@@ -293,31 +231,65 @@ export default () => {
     }
   }
 
-  //---------------------- TRANSFORMERS --------------------------
+  //---------------------- DATABASE QUERIES --------------------------
+  function postAluno(values, title) {
+    sendAsync('INSERT', values).then(res => {
+      if (res.includes('alunos.ra')) {
+        const errorMsg = `${msgError.uniqueRA} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('alunos.id')) {
+        const errorMsg = `${msgError.uniqueRM} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('ERROR')) {
+        showMessage(res, title, 'error')
+      } else {
+        const alunoIncluido = createValuesSelect(dados.ra)
+        selectAlunos(alunoIncluido)
+
+        showMessage(res, title, 'info')
+
+        handleClearFields()
+      }
+    })
+  }
+
+  function selectAlunos(values) {
+    const msgTitle = 'Pesquisar Aluno'
+
+    sendAsync('SELECT', values).then(resp => {
+      if (resp.includes('ERROR')) {
+        showMessage(resp, msgTitle, 'error')
+      } else {
+        if (resp.length === 0) {
+          showMessage('Nenhum aluno encontrado!', msgTitle, 'info')
+        }
+        setAlunos(resp)
+      }
+    })
+  }
+
+  //---------------------- FILTERS --------------------------
   function applyMask(value, type) {
+    let mask = ''
+
     switch (type) {
       case 'ra':
-        return StringMask.apply(value, '000.000.000-A', { reverse: true })
+        mask = '000.000.000-A'
 
       case 'rm':
-        return StringMask.apply(value, '###.##0', { reverse: true })
+        mask = '###.##0'
     }
+    return StringMask.apply(value, mask, { reverse: true })
   }
 
   function capitalize(text) {
-    //split the given string into an array of strings
-    //whenever a blank space is encountered
     let arr = String(text).split(' ')
 
-    // remove empty strings from array
     arr = arr.filter(item => item)
 
-    //loop through each element of the array and capitalize the first
-    //letter if it have more than 2 chars. If it have less than that, all
-    //letters will go to lower case
     const textCapitalized = []
 
-    arr.forEach((word) => {
+    arr.forEach(word => {
       if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
         textCapitalized.push(
           word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
@@ -326,9 +298,6 @@ export default () => {
         textCapitalized.push(word.toLowerCase())
       }
     })
-
-    //Join all the elements of the array back into a string
-    //using a blankspace as a separator
 
     return textCapitalized.join(' ')
   }
@@ -362,14 +331,14 @@ export default () => {
         <TextField
           id='nomeAluno'
           label='Nome do Aluno'
-          onChange={(t) => setDados({ ...dados, nomeAluno: t.target.value })}
+          onChange={t => setDados({ ...dados, nomeAluno: t.target.value })}
           value={dados.nomeAluno}
           variant='outlined'
         />
 
         <InputMask
           id='dataNasc'
-          onChange={(t) => setDados({ ...dados, dataNasc: t.target.value })}
+          onChange={t => setDados({ ...dados, dataNasc: t.target.value })}
           mask='99/99/9999'
           value={dados.dataNasc}
         >
@@ -378,7 +347,7 @@ export default () => {
 
         <InputMask
           id='ra'
-          onChange={(t) => setDados({ ...dados, ra: t.target.value })}
+          onChange={t => setDados({ ...dados, ra: t.target.value })}
           mask='999.999.999-*'
           value={dados.ra}
         >
@@ -388,22 +357,22 @@ export default () => {
         <TextField
           id='nomeMae'
           label='Nome da Mãe'
-          onChange={(t) => setDados({ ...dados, nomeMae: t.target.value })}
+          onChange={t => setDados({ ...dados, nomeMae: t.target.value })}
           value={dados.nomeMae}
           variant='outlined'
         />
       </div>
 
       <div className='buttons'>
-        <Button className='button' id='incluir' onClick={incluirAlunoHandler}>
+        <Button className='button' id='incluir' onClick={handleIncluirAluno}>
           Incluir Aluno
         </Button>
 
-        <Button className='button' id='pesquisar' onClick={searchAlunoHandler}>
+        <Button className='button' id='pesquisar' onClick={handleSearchAluno}>
           Pesquisar Aluno
         </Button>
 
-        <Button className='button' id='limpar' onClick={clearFieldsHandler}>
+        <Button className='button' id='limpar' onClick={handleClearFields}>
           Limpar Campos
         </Button>
       </div>
@@ -416,7 +385,7 @@ export default () => {
           disableSelectionOnClick
           page={page}
           pageSize={5}
-          onPageChange={(newPage) => setPage(newPage.page)}
+          onPageChange={newPage => setPage(newPage.page)}
           rows={alunos}
           rowHeight={45}
         />
