@@ -4,7 +4,7 @@ import { join, resolve } from 'path'
 const { Database } = require('sqlite3').verbose()
 
 const rootPath = process.cwd()
-const dbDirPath = resolve(join(rootPath, '/Banco_de_Dados/'))
+const dbDirPath = resolve(join(rootPath, '/_Banco de Dados/'))
 const dbName = 'db_rm.sqlite3'
 
 let db = ''
@@ -16,7 +16,7 @@ try {
   }
   pathDB = resolve(join(dbDirPath, dbName))
 
-  db = new Database(pathDB, (err) => {
+  db = new Database(pathDB, err => {
     if (err) console.error('Database opening error: ', err)
   })
 
@@ -26,7 +26,7 @@ try {
     "nomeAluno"	TEXT,
     "nomeAlunoNorm"	TEXT,
     "dataNasc"	TEXT,
-    "ra"	TEXT UNIQUE,
+    "ra"  TEXT UNIQUE,
     "nomeMae"	TEXT,
     "nomeMaeNorm"	TEXT
     );`
@@ -47,10 +47,21 @@ function backupDB() {
   fs.copyFileSync(pathDB, pathBackup)
 }
 
-ipcMain.on('asynchronous-message', (event, option, values) => {
+ipcMain.on('asynchronous-message', async (event, option, values) => {
   let sql = ''
 
   switch (option) {
+    case 'GET_LAST_ID':
+      sql = `SELECT count(id)
+          FROM alunos`
+
+      db.all(sql, (err, last) => {
+        const res = err || last[0]['count(id)'] || 0
+        event.reply('asynchronous-reply', res)
+      })
+
+      break
+
     case 'INSERT':
       const insertedMsg = 'Aluno inserido com sucesso.'
 
@@ -61,10 +72,11 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       try {
         backupDB()
 
-        db.run(sql, values, (err) => {
+        db.run(sql, values, err => {
           event.reply('asynchronous-reply', (err && err.message) || insertedMsg)
         })
       } catch (error) {
+        console.log(error.message)
         event.reply('asynchronous-reply', error.message)
       }
 
@@ -79,7 +91,7 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)`
 
       do {
-        sql = sqlInitial
+        let sql = sqlInitial
 
         for (let index = 1; index < nValToInsert; index++) {
           sql += ', (?, ?, ?, ?, ?, ?, ?)'
@@ -88,13 +100,20 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
         try {
           backupDB()
 
-          db.run(sql, valToInsert, (err) => {
-            if (err) console.log(err)
-            event.reply('asynchronous-reply', (err && err.message) || 'OK')
+          db.run(sql, valToInsert, err => {
+            if (err) {
+              console.log(err)
+
+              event.reply('asynchronous-reply', err && err.message)
+              console.log('ERROR')
+              return 'ERROR'
+            }
+            event.reply('asynchronous-reply', 'OK')
           })
         } catch (error) {
           console.log(error)
-          event.reply('asynchronous-reply', error)
+          event.reply('asynchronous-reply', error.message)
+          return 'ERROR'
         }
 
         valToInsert = values.splice(0, 994)
@@ -105,12 +124,22 @@ ipcMain.on('asynchronous-message', (event, option, values) => {
 
     case 'SELECT':
       sql = `SELECT *
-        FROM alunos
-        WHERE nomeAlunoNorm LIKE ?
-        AND dataNasc LIKE ?
-        AND ra LIKE ?
-        AND nomeMaeNorm LIKE ?
-        ORDER BY id`
+          FROM alunos
+          WHERE nomeAlunoNorm LIKE ?
+          AND dataNasc LIKE ?
+          AND ra LIKE ?
+          AND nomeMaeNorm LIKE ?
+          ORDER BY id`
+
+      db.all(sql, values, (err, rows) => {
+        event.reply('asynchronous-reply', (err && err.message) || rows)
+      })
+      break
+
+    case 'SELECT_EXPORT':
+      sql = `SELECT id, nomeAluno, dataNasc, ra, nomeMae
+            FROM alunos
+            ORDER BY id`
 
       db.all(sql, values, (err, rows) => {
         event.reply('asynchronous-reply', (err && err.message) || rows)

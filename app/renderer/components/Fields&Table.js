@@ -23,7 +23,7 @@ export default () => {
       width: 89,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
+      valueGetter: params => {
         const rm = String(params.getValue('id'))
         return applyMask(rm, 'rm')
       },
@@ -36,15 +36,11 @@ export default () => {
     },
     {
       align: 'center',
-      field: 'dataMasked',
+      field: 'dataNasc',
       headerName: 'Data Nasc.',
       width: 140,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
-        const date = String(params.getValue('dataNasc'))
-        return applyMask(date, 'data')
-      },
     },
     {
       align: 'center',
@@ -53,7 +49,7 @@ export default () => {
       width: 160,
       headerAlign: 'center',
       sortable: false,
-      valueGetter: (params) => {
+      valueGetter: params => {
         const ra = String(params.getValue('ra'))
         return applyMask(ra, 'ra')
       },
@@ -66,10 +62,6 @@ export default () => {
     },
     {
       field: 'id',
-      hide: true,
-    },
-    {
-      field: 'dataNasc',
       hide: true,
     },
     {
@@ -88,7 +80,8 @@ export default () => {
     emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenhidos.`,
     macNotAuthorized:
       'Esse computador não está autorizado para o uso do sistema ou está sem acesso à internet.',
-    unique: 'Já existe esse R.A. no sistema.',
+    uniqueRA: 'Já existe esse RA no sistema.',
+    uniqueRM: 'Já existe esse RM no sistema.',
     wrongDate: 'Confira a DATA DE NASCIMENTO inserida e tente novamente.',
     wrongDay: 'O DIA da DATA DE NASCIMENTO está incorreto.',
     wrongMonth: 'O MÊS da DATA DE NASCIMENTO está incorreto.',
@@ -105,11 +98,11 @@ export default () => {
   const [runApp, setRunApp] = useState(false)
 
   useEffect(() => {
-    MacAddress.all().then((networks) => {
+    MacAddress.all().then(networks => {
       const networksName = Object.keys(networks)
 
-      networksName.forEach((netName) => {
-        authorizedMACs.forEach((mac) => {
+      networksName.forEach(netName => {
+        authorizedMACs.forEach(mac => {
           if (mac === networks[netName]['mac']) {
             setRunApp(true)
           }
@@ -119,22 +112,23 @@ export default () => {
   })
 
   //---------------------- HANDLERS --------------------------
-  function clearFieldsHandler() {
+  function handleClearFields() {
     setDados(initialDados)
   }
 
-  function incluirAlunoHandler() {
+  function handleIncluirAluno() {
     if (runApp) {
-      const dataClean = treatDataNasc(dados.dataNasc)
+      const data = dados.dataNasc
       const errorTitle = 'Erro ao Incluir Aluno'
 
-      if ([dados.nomeAluno, dataClean, dados.ra].includes('')) {
+      if ([dados.nomeAluno, data, dados.ra].includes('')) {
         showMessage(msgError.emptyFields, errorTitle, 'error')
-      } else if (!validateDateLength(dataClean)) {
+      } else if (!validateDateLength(data)) {
+        console.log(data)
         showMessage(msgError.wrongDate, errorTitle, 'error')
       } else {
-        const month = parseInt(dataClean.substr(2, 2), 10)
-        const year = parseInt(dataClean.substr(4, 4), 10)
+        const month = parseInt(data.substr(3, 2), 10)
+        const year = parseInt(data.substr(6, 4), 10)
         const currentYear = new Date().getFullYear()
 
         if (year < 2000 || year > currentYear - 5) {
@@ -161,35 +155,7 @@ export default () => {
     }
   }
 
-  function incluirAlunoExcelHandler() {
-    const dictPath = process.cwd()
-    const fileName = 'RM_2020_base.xlsx'
-    const filePath = `${dictPath}/${fileName}`
-
-    readXlsxFile(filePath).then((rows) => {
-      rows.forEach((row, index) => {
-        const norm = normalize(row)
-        const newRa = parseInt(index + 1, 10)
-
-        const values = [
-          `${newRa}`,
-          `${row}`,
-          norm,
-          '00000000',
-          `${treatRa(newRa)}`,
-          '',
-          '',
-        ]
-        sendAsync('INSERT_EXCEL', values).then((res) => {
-          if (res.includes('ERROR')) {
-            showMessage(res, 'Incuir Aluno', 'error')
-          }
-        })
-      })
-    })
-  }
-
-  function searchAlunoHandler() {
+  function handleSearchAluno() {
     if (runApp) {
       const values = createValuesSelect(
         dados.ra,
@@ -205,64 +171,35 @@ export default () => {
     }
   }
 
-  //---------------------- DATABASE QUERIES --------------------------
-  function postAluno(values, title) {
-    sendAsync('INSERT', values).then((res) => {
-      if (res.includes('UNIQUE')) {
-        alert(res)
-        const errorMsg = `${msgError.unique} ${msgError.correction}`
-        showMessage(errorMsg, title, 'error')
-      } else if (res.includes('ERROR')) {
-        showMessage(res, title, 'error')
-      } else {
-        selectAlunos(createValuesSelect(dados.ra))
-        showMessage(res, title, 'info')
-        clearFieldsHandler()
-      }
-    })
-  }
-
-  function selectAlunos(values) {
-    const msgTitle = 'Pesquisar Aluno'
-
-    sendAsync('SELECT', values).then((resp) => {
-      if (resp.includes('ERROR')) {
-        showMessage(resp, msgTitle, 'error')
-      } else {
-        if (resp.length === 0) {
-          showMessage('Nenhum aluno encontrado!', msgTitle, 'info')
-        }
-        setAlunos(resp)
-      }
-    })
-  }
-
-  //---------------------- CREATORS --------------------------
+  //---------------------- CREATORS creators--------------------------
   function createQuestionMessage(values) {
     return `Confira os dados abaixo:
     Aluno: ${values[0]}
-    Nasc.:  ${applyMask(values[2], 'data')}
+    Nasc.:  ${values[2]}
     RA.:      ${applyMask(values[3], 'ra')}
     Mãe:    ${values[4] || 'NÃO INFORMADA'}\n
     Os dados estão corretos?`
   }
 
   function createValuesPost() {
+    const aluno = capitalize(dados.nomeAluno)
+    const mae = capitalize(dados.nomeMae) || 'NÃO INFORMADO'
+
     return [
-      capitalize(dados.nomeAluno),
-      normalize(dados.nomeAluno),
-      treatDataNasc(dados.dataNasc),
+      aluno,
+      normalize(aluno),
+      dados.dataNasc,
       treatRa(dados.ra),
-      capitalize(dados.nomeMae),
-      normalize(dados.nomeMae),
+      mae,
+      normalize(mae),
     ]
   }
 
   function createValuesSelect(ra, aluno = '', nasc = '', mae = '') {
     return [
       `${normalize(aluno)}%`,
-      `${String(nasc).replace(/\D+/g, '')}%`,
-      `${treatRa(ra)}%`,
+      `${nasc}%`,
+      `%${treatRa(ra)}`,
       `${normalize(mae)}%`,
     ]
   }
@@ -278,7 +215,7 @@ export default () => {
           title,
           type,
         })
-        .then((res) => {
+        .then(res => {
           if (res.response == 0) {
             // SIM
             postAluno(values, title)
@@ -294,34 +231,65 @@ export default () => {
     }
   }
 
-  //---------------------- TRANSFORMERS --------------------------
-  function applyMask(value, type) {
-    switch (type) {
-      case 'data':
-        return StringMask.apply(value, '00/00/0000')
+  //---------------------- DATABASE QUERIES --------------------------
+  function postAluno(values, title) {
+    sendAsync('INSERT', values).then(res => {
+      if (res.includes('alunos.ra')) {
+        const errorMsg = `${msgError.uniqueRA} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('alunos.id')) {
+        const errorMsg = `${msgError.uniqueRM} ${msgError.correction}`
+        showMessage(errorMsg, title, 'error')
+      } else if (res.includes('ERROR')) {
+        showMessage(res, title, 'error')
+      } else {
+        const alunoIncluido = createValuesSelect(dados.ra)
+        selectAlunos(alunoIncluido)
 
+        showMessage(res, title, 'info')
+
+        handleClearFields()
+      }
+    })
+  }
+
+  function selectAlunos(values) {
+    const msgTitle = 'Pesquisar Aluno'
+
+    sendAsync('SELECT', values).then(resp => {
+      if (resp.includes('ERROR')) {
+        showMessage(resp, msgTitle, 'error')
+      } else {
+        if (resp.length === 0) {
+          showMessage('Nenhum aluno encontrado!', msgTitle, 'info')
+        }
+        setAlunos(resp)
+      }
+    })
+  }
+
+  //---------------------- FILTERS --------------------------
+  function applyMask(value, type) {
+    let mask = ''
+
+    switch (type) {
       case 'ra':
-        return StringMask.apply(value, '000.000.000-A', { reverse: true })
+        mask = '000.000.000-A'
 
       case 'rm':
-        return StringMask.apply(value, '###.##0', { reverse: true })
+        mask = '###.##0'
     }
+    return StringMask.apply(value, mask, { reverse: true })
   }
 
   function capitalize(text) {
-    //split the given string into an array of strings
-    //whenever a blank space is encountered
+    let arr = String(text).split(' ')
 
-    let arr = text.replace('  ', ' ')
-    arr = text.split(' ')
-
-    //loop through each element of the array and capitalize the first
-    //letter if it have more than 2 chars. If it have less than that, all
-    //letters will go to lower case
+    arr = arr.filter(item => item)
 
     const textCapitalized = []
 
-    arr.forEach((word) => {
+    arr.forEach(word => {
       if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
         textCapitalized.push(
           word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
@@ -330,9 +298,6 @@ export default () => {
         textCapitalized.push(word.toLowerCase())
       }
     })
-
-    //Join all the elements of the array back into a string
-    //using a blankspace as a separator
 
     return textCapitalized.join(' ')
   }
@@ -343,10 +308,6 @@ export default () => {
       .replace(/\p{Diacritic}/gu, '')
       .replace(/[`´'"]/g, '')
       .toLowerCase()
-  }
-
-  function treatDataNasc(value) {
-    return String(value).replace(/\D+/g, '')
   }
 
   function treatRa(value) {
@@ -361,7 +322,7 @@ export default () => {
   }
 
   function validateDateLength(date) {
-    return RegExp(/\d{8}/g).test(date)
+    return RegExp(/[\w\/]{10}/g).test(date)
   }
 
   return (
@@ -370,14 +331,14 @@ export default () => {
         <TextField
           id='nomeAluno'
           label='Nome do Aluno'
-          onChange={(t) => setDados({ ...dados, nomeAluno: t.target.value })}
+          onChange={t => setDados({ ...dados, nomeAluno: t.target.value })}
           value={dados.nomeAluno}
           variant='outlined'
         />
 
         <InputMask
           id='dataNasc'
-          onChange={(t) => setDados({ ...dados, dataNasc: t.target.value })}
+          onChange={t => setDados({ ...dados, dataNasc: t.target.value })}
           mask='99/99/9999'
           value={dados.dataNasc}
         >
@@ -386,7 +347,7 @@ export default () => {
 
         <InputMask
           id='ra'
-          onChange={(t) => setDados({ ...dados, ra: t.target.value })}
+          onChange={t => setDados({ ...dados, ra: t.target.value })}
           mask='999.999.999-*'
           value={dados.ra}
         >
@@ -396,22 +357,22 @@ export default () => {
         <TextField
           id='nomeMae'
           label='Nome da Mãe'
-          onChange={(t) => setDados({ ...dados, nomeMae: t.target.value })}
+          onChange={t => setDados({ ...dados, nomeMae: t.target.value })}
           value={dados.nomeMae}
           variant='outlined'
         />
       </div>
 
       <div className='buttons'>
-        <Button className='button' id='incluir' onClick={incluirAlunoHandler}>
+        <Button className='button' id='incluir' onClick={handleIncluirAluno}>
           Incluir Aluno
         </Button>
 
-        <Button className='button' id='pesquisar' onClick={searchAlunoHandler}>
+        <Button className='button' id='pesquisar' onClick={handleSearchAluno}>
           Pesquisar Aluno
         </Button>
 
-        <Button className='button' id='limpar' onClick={clearFieldsHandler}>
+        <Button className='button' id='limpar' onClick={handleClearFields}>
           Limpar Campos
         </Button>
       </div>
@@ -424,7 +385,7 @@ export default () => {
           disableSelectionOnClick
           page={page}
           pageSize={5}
-          onPageChange={(newPage) => setPage(newPage.page)}
+          onPageChange={newPage => setPage(newPage.page)}
           rows={alunos}
           rowHeight={45}
         />
