@@ -272,6 +272,7 @@ const ImportExportExcel = () => {
       return String(text)
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
+        .replace(/[!@#$%^&*(),.?":{}|<>\[\];/\\'’]/g, '')
         .toLowerCase()
     }
     return null
