@@ -177,10 +177,7 @@ const ImportExportExcel = () => {
     })
 
     await sendAsync('INSERT_EXCEL', aluno).then(res => {
-      if (res.includes('OK')) {
-        console.log('Dados inseridos com sucesso!')
-      } else {
-        console.log('ERROR_INSERT_EXCEL: ' + res)
+      if (res.includes('SQLITE')) {
         error = true
 
         if (res.includes('alunos.ra')) {
@@ -209,16 +206,17 @@ const ImportExportExcel = () => {
     if (!error) {
       await sendAsync('GET_LAST_ID').then(id => {
         insertedIDs.push(id)
+
+        let msg = `Alunos incluídos com sucesso!\n`
+        msg += `RM's gerados seguindo a ordem da planilha: do ${insertedIDs[0]} ao ${insertedIDs[1]}.`
+  
+        showMessage(
+          msg,
+          'Importar Excel',
+          'info'
+        )
       })
 
-      let msg = `Alunos incluídos com sucesso!\n`
-      msg += `RM's gerados seguindo a ordem da planilha: do ${insertedIDs[0]} ao ${insertedIDs[1]}.`
-
-      showMessage(
-        msg,
-        'Importar Excel',
-        'error'
-      )
     }
   }
 
