@@ -125,7 +125,6 @@ export default () => {
       if ([dados.nomeAluno, data, dados.ra].includes('')) {
         showMessage(msgError.emptyFields, errorTitle, 'error');
       } else if (!validateDateLength(data)) {
-        console.log(data);
         showMessage(msgError.wrongDate, errorTitle, 'error');
       } else {
         const month = parseInt(data.substr(3, 2), 10);
@@ -159,7 +158,7 @@ export default () => {
   function handleSearchAluno() {
     if (runApp) {
       const values = createValuesSelect(
-        dados.ra,
+        clearRa(dados.ra),
         dados.nomeAluno,
         dados.dataNasc,
         dados.nomeMae,
@@ -172,8 +171,8 @@ export default () => {
     }
   }
 
-  function handleRaValue(ra) { 
-    const cleanRa = removeRaMask(ra);
+  function handleRaValue(ra) {
+    const cleanRa = clearRa(ra);
     const newRA = applyMask(cleanRa, 'ra');
 
     setDados({ ...dados, ra: newRA });
@@ -197,7 +196,7 @@ export default () => {
       aluno,
       normalize(aluno),
       dados.dataNasc,
-      removeRaMask(dados.ra),
+      clearRa(dados.ra),
       mae,
       normalize(mae),
     ];
@@ -207,7 +206,7 @@ export default () => {
     return [
       `${normalize(aluno)}%`,
       `${nasc}%`,
-      `%${removeRaMask(ra)}`,
+      `%${clearRa(ra)}`,
       `${normalize(mae)}%`,
     ];
   }
@@ -316,6 +315,17 @@ export default () => {
     return textCapitalized.join(' ');
   }
 
+  function clearRa(ra) {
+    if (String(ra) !== '') {
+      const noMaskedRa = removeRaMask(ra);
+      const noZeroRa = removeZerosFromLeft(noMaskedRa);
+
+      return noZeroRa;
+    }
+
+    return ra;
+  }
+
   function normalize(text) {
     return String(text)
       .normalize('NFD')
@@ -324,11 +334,32 @@ export default () => {
       .toLowerCase();
   }
 
-  function removeRaMask(value) {
-    if (value) {
-      return String(value).replace(/[\W_]/g, '').toUpperCase();
+  function removeRaMask(ra) {
+    const cleanRa = String(ra).replace(/[.-]/g, '').toUpperCase();
+
+    return cleanRa;
+  }
+
+  function removeZerosFromLeft(cleanRa) {
+    let lettersArray = String(cleanRa).split('');
+
+    if(lettersArray.length === 11)
+      lettersArray = lettersArray.splice(1)
+
+    let indexFirstNumber = 0;
+
+    for (let index = 0; index < lettersArray.length; index++) {
+      const letter = lettersArray[index];
+
+      if (!letter.includes('0')) {
+        indexFirstNumber = index;
+        break;
+      }
     }
-    return value;
+    const cleanArray = lettersArray.slice(indexFirstNumber);
+    const clearRa = String(cleanArray.join(''));
+
+    return clearRa;
   }
 
   //---------------------- VALIDATORS --------------------------
