@@ -320,7 +320,7 @@ export default () => {
     return String(text)
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
-      .replace(/[!@#$%^&*(),.?":{}|<>\[\];/\\'’]/g, '')
+      .replace(/[!@#$^&*(),.?":{}|<>\[\];/\\'’]/g, '')
       .toLowerCase();
   }
 
