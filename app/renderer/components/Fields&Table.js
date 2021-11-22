@@ -172,9 +172,9 @@ export default () => {
     }
   }
 
-  function handleRaValue(ra) {
+  function handleRaValue(ra) { 
     const cleanRa = removeRaMask(ra);
-    const newRA = applyMask(ra, 'ra');
+    const newRA = applyMask(cleanRa, 'ra');
 
     setDados({ ...dados, ra: newRA });
   }
