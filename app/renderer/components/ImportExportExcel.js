@@ -1,117 +1,114 @@
-import React, { useState } from 'react'
-import fs from 'fs'
-import { join, resolve } from 'path'
-import XLSX from 'xlsx'
-const { dialog } = require('electron').remote
+import React, { useState } from 'react';
+import fs from 'fs';
+import { join, resolve } from 'path';
+import os from 'os';
+import XLSX from 'xlsx';
+const { dialog } = require('electron').remote;
 
-import sendAsync from '../../../app/api/renderer'
-const IconExport = '../../app/assets/icons/icon-export.png'
-const IconImport = '../../app/assets/icons/icon-import.png'
+import sendAsync from '../../../app/api/renderer';
+const IconExport = '../../app/assets/icons/icon-export.png';
+const IconImport = '../../app/assets/icons/icon-import.png';
 
 const ImportExportExcel = () => {
-  const [excelData, setExcelData] = useState('EMPTY')
+  const [excelData, setExcelData] = useState('EMPTY');
 
   async function readExcel(file) {
     await new Promise((resolve, reject) => {
-      const fileReader = new FileReader()
+      const fileReader = new FileReader();
 
       try {
-        fileReader.readAsArrayBuffer(file)
+        fileReader.readAsArrayBuffer(file);
 
         fileReader.onload = e => {
-          const bufferArray = e.target.result
+          const bufferArray = e.target.result;
 
-          const wb = XLSX.read(bufferArray, { type: 'buffer' })
+          const wb = XLSX.read(bufferArray, { type: 'buffer' });
 
-          const wsName = wb.SheetNames[0]
-          const ws = wb.Sheets[wsName]
+          const wsName = wb.SheetNames[0];
+          const ws = wb.Sheets[wsName];
 
-          let data = ''
+          let data = '';
 
           try {
             data = XLSX.utils.sheet_to_json(ws, {
               header: ['id', 'nomeAluno', 'dataNasc', 'ra', 'nomeMae'],
-            })
+            });
 
-            const firstCell = data[0].id
+            const firstCell = data[0].id;
 
             if (!(firstCell > 0)) {
               const newData = XLSX.utils.sheet_to_json(ws, {
                 header: ['nomeAluno', 'dataNasc', 'ra', 'nomeMae', 'id'],
-              })
-              resolve(newData)
+              });
+              resolve(newData);
             } else {
-              resolve(data)
+              resolve(data);
             }
           } catch (error) {
-            console.log(error)
-            showMessage(error, 'Importar Excel', 'error')
+            console.log(error);
+            showMessage(error, 'Importar Excel', 'error');
           }
-        }
+        };
       } catch (error) {
-        console.log('Nenhum arquivo selecionado!')
-        setExcelData('EMPTY')
-        document.getElementById('file').value = ''
+        console.log('Nenhum arquivo selecionado!');
+        setExcelData('EMPTY');
+        document.getElementById('file').value = '';
       }
       fileReader.onerror = error => {
-        showMessage(error, 'Importar Excel', 'error')
-        reject(error)
-      }
+        showMessage(error, 'Importar Excel', 'error');
+        reject(error);
+      };
     }).then(data => {
-      let alunos = []
+      let alunos = [];
 
       try {
         data.forEach(element => {
-          let readDate = element.dataNasc
+          let readDate = element.dataNasc;
 
           if (readDate) {
             if (!String(readDate).includes('/')) {
-              let date = new Date(Date.UTC(0, 0, readDate, -12))
+              let date = new Date(Date.UTC(0, 0, readDate, -12));
 
-              let dateString = date.toLocaleDateString('pt')
+              let dateString = date.toLocaleDateString('pt');
 
-              element = { ...element, dataNasc: dateString }
+              element = { ...element, dataNasc: dateString };
             }
           }
-          alunos.push(element)
-        })
-        setExcelData(alunos)
+          alunos.push(element);
+        });
+        setExcelData(alunos);
         showMessage(
           'Leitura da planilha concluída! Dados prontos para serem importados.',
           'Importar Excel',
-          'info'
-        )
+          'info',
+        );
       } catch (error) {
-        console.log(error)
-        showMessage(
-          error,
-          'Importar Excel',
-          'error'
-        )
+        console.log(error);
+        showMessage(error, 'Importar Excel', 'error');
       }
-    })
+    });
   }
 
   async function handleImport() {
     if (excelData !== 'EMPTY') {
-      const alunos = []
+      const alunos = [];
 
       await excelData.forEach(row => {
-        const aluno = createAluno(row)
+        const aluno = createAluno(row);
 
-        alunos.push(...aluno)
-      })
+        alunos.push(...aluno);
+      });
 
-      postAluno(alunos)
+      postAluno(alunos);
 
-      setExcelData('EMPTY')
-      document.getElementById('file').value = ''
+      setExcelData('EMPTY');
+      document.getElementById('file').value = '';
     } else {
       showMessage(
         'Erro! Nenhum arquivo selecionado.',
         'Importar Excel',
-        'error'
-      )
+        'error',
+      );
     }
   }
 
@@ -119,115 +116,115 @@ const ImportExportExcel = () => {
     try {
       sendAsync('SELECT_EXPORT').then(res => {
         if (res.includes('ERROR')) {
-          showMessage(res, 'Incluir Aluno', 'error')
+          showMessage(res, 'Incluir Aluno', 'error');
         } else {
           try {
-            const rootPath = process.cwd()
-            const fileDirPath = resolve(join(rootPath, '/_Excel/'))
+            const userHomeDirectoryPath = os.homedir();
+            const desktopDirectoryPath = resolve(
+              join(userHomeDirectoryPath, '/Desktop/'),
+            );
+            const rmDirectoryPath = resolve(
+              join(desktopDirectoryPath, '/Gerenciador de RM/'),
+            );
 
-            const year = new Date().getFullYear()
-            const mon = new Date().getMonth() + 1
-            const day = new Date().getDate()
+            const excelDirectoryPath = resolve(
+              join(rmDirectoryPath, '/Excel/'),
+            );
 
-            const fileName = `RM ${year} - ${day}-${mon}.xlsx`
-
-            if (!fs.existsSync(fileDirPath)) {
-              fs.mkdirSync(fileDirPath)
+            if (!fs.existsSync(excelDirectoryPath)) {
+              fs.mkdirSync(excelDirectoryPath);
             }
 
-            const pathFile = resolve(join(fileDirPath, fileName))
+            const year = new Date().getFullYear();
+            const mon = new Date().getMonth() + 1;
+            const day = new Date().getDate();
 
-            const ws = XLSX.utils.json_to_sheet(res, { skipHeader: true })
-            const wb = XLSX.utils.book_new()
-            XLSX.utils.book_append_sheet(wb, ws, `1991 - ${year}`)
-            XLSX.writeFile(wb, pathFile)
+            const fileName = `RM ${year} - ${day}-${mon}.xlsx`;
 
-            console.log('Exportação concluída!')
-            showMessage(
-              'Exportação concluída!',
-              'Exportar Excel',
-              'info'
-            )
+            const pathFile = resolve(join(excelDirectoryPath, fileName));
+
+            const ws = XLSX.utils.json_to_sheet(res, { skipHeader: true });
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `1991 - ${year}`);
+            XLSX.writeFile(wb, pathFile);
+
+            showMessage('Exportação concluída!', 'Exportar Excel', 'info');
           } catch (error) {
             showMessage(
               'Algo deu errado na exportação dos dados.',
               'Exportar Excel',
-              'error'
-            )
-            console.log(error)
+              'error',
+            );
+            console.log(error);
           }
         }
-      })
+      });
     } catch (error) {
       showMessage(
         'Erro em adquirir os dados!\n' + error,
         'Exportar Excel',
-        'error'
-      )
+        'error',
+      );
       console.log(error);
     }
   }
 
   async function postAluno(aluno) {
-    let error = false
-    let firstIdInserted = 0
-    let numberOfInserted = 0
+    let error = false;
+    let firstIdInserted = 0;
+    let numberOfInserted = 0;
 
     await sendAsync('GET_LAST_ID').then(id => {
       firstIdInserted = id;
-    })
+    });
 
-    await sendAsync('INSERT_EXCEL', aluno).then(res => {
-      if (String(res).includes('SQLITE')) {
-        error = true
+    await sendAsync('INSERT_EXCEL', aluno).then(response => {
+      const res = String(response);
+
+      if (res.includes('SQLITE')) {
+        error = true;
 
         if (res.includes('alunos.ra')) {
           showMessage(
             'Já existe esse RA no sistema. Favor, verificar.',
             'Importar Excel',
-            'error'
-          )
+            'error',
+          );
         } else if (res.includes('alunos.id')) {
           showMessage(
             'Já existe esse RM no sistema. Favor, verificar.',
             'Importar Excel',
-            'error'
-          )
+            'error',
+          );
         } else {
-          showMessage(
-            res,
-            'Importar Excel',
-            'error'
-          )
-          console.log(res)
+          showMessage(res, 'Importar Excel', 'error');
+          console.log(res);
         }
       } else {
-        numberOfInserted = res;
+        numberOfInserted = response;
       }
-    })
+    });
 
     if (!error) {
       const lastIdIserted = firstIdInserted + numberOfInserted;
 
-      let msg = `Alunos incluídos com sucesso!\n`
-      msg += `RM's gerados seguindo a ordem da planilha: do ${firstIdInserted + 1} ao ${lastIdIserted}.`
+      let msg = `Alunos incluídos com sucesso!\n`;
+      msg += `RM's gerados seguindo a ordem da planilha: do ${
+        firstIdInserted + 1
+      } ao ${lastIdIserted}.`;
 
-      showMessage(
-        msg,
-        'Importar Excel',
-        'info'
-      )
+      showMessage(msg, 'Importar Excel', 'info');
     }
   }
 
   function createAluno(row) {
-    const id = row.id
-    const nomeAlunoCapd = capitalize(row.nomeAluno)
-    const nomeAlunoNormd = normalize(nomeAlunoCapd)
-    const dataNasc = row.dataNasc
-    const raValue = treatRa(row.ra)
-    const nomeMaeCapd = capitalize(row.nomeMae)
-    const nomeMaeNormd = normalize(nomeMaeCapd)
+    const id = row.id;
+    const nomeAlunoCapd = capitalize(row.nomeAluno);
+    const nomeAlunoNormd = normalize(nomeAlunoCapd);
+    const dataNasc = row.dataNasc;
+    const raValue = treatRa(row.ra);
+    const nomeMaeCapd = capitalize(row.nomeMae);
+    const nomeMaeNormd = normalize(nomeMaeCapd);
 
     return [
       id || null,
@@ -237,15 +234,15 @@ const ImportExportExcel = () => {
       raValue || row.id,
       nomeMaeCapd || 'NÃO INFORMADO',
       nomeMaeNormd || 'nao informado',
-    ]
+    ];
   }
 
   function capitalize(text) {
     if (text && text !== 'NÃO INFORMADO') {
-      let arr = [String(text).replace('  ', ' ')]
-      arr = String(text).split(' ')
+      let arr = [String(text).replace('  ', ' ')];
+      arr = String(text).split(' ');
 
-      let textCapitalized = []
+      let textCapitalized = [];
 
       arr.forEach(word => {
         if (
@@ -253,16 +250,16 @@ const ImportExportExcel = () => {
           !RegExp(/\bdas\b|\bdos\b/g).test(word.toLowerCase())
         ) {
           textCapitalized.push(
-            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-          )
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          );
         } else {
-          textCapitalized.push(word.toLowerCase())
+          textCapitalized.push(word.toLowerCase());
         }
-      })
+      });
 
-      return textCapitalized.join(' ')
+      return textCapitalized.join(' ');
     }
-    return null
+    return null;
   }
 
   function normalize(text) {
@@ -271,32 +268,32 @@ const ImportExportExcel = () => {
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
         .replace(/[!@#$%^&*(),.?":{}|<>\[\];/\\'’]/g, '')
-        .toLowerCase()
+        .toLowerCase();
     }
-    return null
+    return null;
   }
 
   function treatRa(ra) {
     if (ra) {
-      let addZero = false
-      let array = String(ra).split('')
-      let newArray = []
+      let addZero = false;
+      let array = String(ra).split('');
+      let newArray = [];
 
       array.forEach(letter => {
         if (!letter.includes('0') || addZero) {
-          newArray.push(letter)
+          newArray.push(letter);
 
-          addZero = true
+          addZero = true;
         }
-      })
+      });
 
-      let cleanRa = newArray.join('')
+      let cleanRa = newArray.join('');
 
       return String(cleanRa)
         .replace(/[\W_A-WY-Za-wy-z]/g, '')
-        .toUpperCase()
+        .toUpperCase();
     }
-    return null
+    return null;
   }
 
   function showMessage(message, title, type, values = '') {
@@ -312,17 +309,16 @@ const ImportExportExcel = () => {
         })
         .then(res => {
           if (res.response == 0) {
-            // SIM
-            postAluno(values, title)
+            postAluno(values, title);
           }
-        })
+        });
     } else {
       dialog.showMessageBoxSync({
         message,
         title,
         type,
         buttons: ['OK'],
-      })
+      });
     }
   }
 
@@ -353,12 +349,12 @@ const ImportExportExcel = () => {
         id='file'
         type='file'
         onChange={e => {
-          let selFile = e.target.files[0]
-          readExcel(selFile)
+          let selFile = e.target.files[0];
+          readExcel(selFile);
         }}
       />
     </div>
-  )
-}
+  );
+};
 
-export default ImportExportExcel
+export default ImportExportExcel;

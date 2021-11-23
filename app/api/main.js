@@ -1,22 +1,38 @@
 import fs from 'fs';
 import { ipcMain } from 'electron';
 import { join, resolve } from 'path';
+import os from 'os';
 const { Database } = require('sqlite3').verbose();
 
-const rootPath = process.cwd();
-const dbDirPath = resolve(join(rootPath, '/_Banco de Dados/'));
-const dbName = 'rm_mvmi.sqlite3';
+const userHomeDirectoryPath = os.homedir();
+const desktopDirectoryPath = resolve(
+  join(userHomeDirectoryPath, '/Desktop/'),
+);
+const rmDirectoryPath = resolve(
+  join(desktopDirectoryPath, '/Gerenciador de RM/'),
+);
+const dbDirectoryPath = resolve(join(rmDirectoryPath, '/Banco de Dados/'));
+const excelDirectoryPath = resolve(join(rmDirectoryPath, '/Excel/'));
+const databaseName = 'rm_mvmi.sqlite3';
 
 let db = '';
-let pathDB = '';
+let pathDatabase = '';
 
 try {
-  if (!fs.existsSync(dbDirPath)) {
-    fs.mkdirSync(dbDirPath);
+  if (!fs.existsSync(rmDirectoryPath)) {
+    fs.mkdirSync(rmDirectoryPath);
   }
-  pathDB = resolve(join(dbDirPath, dbName));
 
-  db = new Database(pathDB, err => {
+  if (!fs.existsSync(dbDirectoryPath)) {
+    fs.mkdirSync(dbDirectoryPath);
+  }
+
+  if (!fs.existsSync(excelDirectoryPath)) {
+    fs.mkdirSync(excelDirectoryPath);
+  }
+  pathDatabase = resolve(join(dbDirectoryPath, databaseName));
+
+  db = new Database(pathDatabase, err => {
     if (err) console.error('Database opening error: ', err);
   });
 
@@ -36,15 +52,15 @@ try {
 }
 
 function backupDB() {
-  const pathDirBackup = resolve(join(dbDirPath, 'Backup/'));
+  const pathDirectoryBackup = resolve(join(dbDirectoryPath, 'Backup/'));
 
-  if (!fs.existsSync(pathDirBackup)) {
-    fs.mkdirSync(pathDirBackup);
+  if (!fs.existsSync(pathDirectoryBackup)) {
+    fs.mkdirSync(pathDirectoryBackup);
   }
 
-  const pathBackup = resolve(join(pathDirBackup, dbName));
+  const pathBackup = resolve(join(pathDirectoryBackup, databaseName));
 
-  fs.copyFileSync(pathDB, pathBackup);
+  fs.copyFileSync(pathDatabase, pathBackup);
 }
 
 ipcMain.on('asynchronous-message', async (event, option, values) => {
