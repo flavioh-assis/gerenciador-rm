@@ -43,6 +43,7 @@
 }
 .impExpExcel #file {
   color: #fff;
+  cursor: pointer;
   font-size: 1.5rem;
   height: 3rem;
   margin-left: 4.9rem;
