@@ -1,52 +1,53 @@
-# Registration Number Manager / Gerenciador de RM
-🇺🇸/🇬🇧: Student registration number manager for schools<br />
-🇧🇷: Gerenciador de RM para a EMEB. Maria Virgínia Matarazzo Ippólito
+# Gerenciador de RM
+Gerenciador de Registro de Matrícula para a EMEB. Maria Virgínia Matarazzo Ippólito
 
-# The Project
-* Missions:
-  * Create a desktop software that helps the registration data management
-  * It must be easy to use, quick to run and responsive
-  * Help to reduce the most common user errors
+# O Projeto
+* Objetivos:
+  * Criar um programa desktop que auxilie na gestão de dados
+  * Ser fácil de usar, rápido de executar e responsivo
+  * Ajudar a reduzir os erros mais comuns do usuário
 
-* Tools:
-  * [Electron](https://www.electronjs.org/): build the desktop application
-  * [React](https://reactjs.org/): build the UI
+* Ferramentas/Tecnologias:
+  * [Electron](https://www.electronjs.org/): aplicação desktop
+  * [React](https://reactjs.org/): interface gráfica
   * [Node.js](https://nodejs.org/en/): back-end
-  * [SQLite](https://www.sqlite.org/index.html): database
+  * [SQLite](https://www.sqlite.org/index.html): banco de dados
 
-* Design, Coded and Tested by:
+* Criado, codificado e testado por:
   * [Flavio Assis](https://github.com/flavioh-assis)
   
-* License:
+* Licença:
   * [MIT](./LICENSE)
   
-## Quick start
+## Como usar
 
-Clone the repository
+Clone o repositório
 ```bash
 git clone --depth=1 https://github.com/flavioh-assis/rm_manager
 ```
 
-Install dependencies
+Instale as dependências
 ```bash
 cd rm_manager & yarn install
 ```
 
-Development
+Inicialize a aplicação em dev
 ```bash
-yarn start
+yarn dev
 ```
 
 ## DevTools
 
-Toggle DevTools:
+Abrir DevTools:
 
 * Linux/Windows: <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>I</kbd> or <kbd>F12</kbd>
 
-## Packaging
-
-After several hours spent trying to get the packaging work using [electron-builder](https://www.electron.build), [electron-packager](https://github.com/electron/electron-packager) and [electron-forge](https://www.electronforge.io/), I was not able to make the proper distribution.
-
-I will let the project in standby for now. I'm gonna study something else and maybe I'll back to work in this project.
-
-Thanks
+## Criar pacote para distribuição
+  * Para Windows:
+```bash
+yarn dist:win
+```
+  * Para Linux:
+```bash
+yarn dist:lin
+```
