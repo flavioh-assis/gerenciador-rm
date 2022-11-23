@@ -1,7 +1,7 @@
 # Gerenciador de RM
 Gerenciador de Registro de Matrícula para a EMEB. Maria Virgínia Matarazzo Ippólito
 
-# O Projeto
+## O Projeto
 * Objetivos:
   * Criar um programa desktop que auxilie na gestão de dados
   * Ser fácil de usar, rápido de executar e responsivo
