@@ -4,6 +4,7 @@ import { join, resolve } from 'path';
 import os from 'os';
 import XLSX from 'xlsx';
 const { dialog } = require('electron').remote;
+const { shell } = require('electron');
 
 import sendAsync from '../../../app/api/renderer';
 const IconExport = '../../app/assets/icons/icon-export.png';
@@ -80,7 +81,7 @@ const ImportExportExcel = () => {
         showMessage(
           'Leitura da planilha concluída! Dados prontos para serem importados.',
           'Importar Excel',
-          'info',
+          'info'
         );
       } catch (error) {
         console.log(error);
@@ -104,11 +105,7 @@ const ImportExportExcel = () => {
       setExcelData('EMPTY');
       document.getElementById('file').value = '';
     } else {
-      showMessage(
-        'Erro! Nenhum arquivo selecionado.',
-        'Importar Excel',
-        'error',
-      );
+      showMessage('Erro! Nenhum arquivo selecionado.', 'Importar Excel', 'error');
     }
   }
 
@@ -120,26 +117,20 @@ const ImportExportExcel = () => {
         } else {
           try {
             const userHomeDirectoryPath = os.homedir();
-            const desktopDirectoryPath = resolve(
-              join(userHomeDirectoryPath, '/Desktop/'),
-            );
-            const rmDirectoryPath = resolve(
-              join(desktopDirectoryPath, '/Gerenciador de RM/'),
-            );
+            const desktopDirectoryPath = resolve(join(userHomeDirectoryPath, '/Desktop/'));
+            const rmDirectoryPath = resolve(join(desktopDirectoryPath, '/Gerenciador de RM/'));
 
-            const excelDirectoryPath = resolve(
-              join(rmDirectoryPath, '/Excel/'),
-            );
+            const excelDirectoryPath = resolve(join(rmDirectoryPath, '/Excel/'));
 
             if (!fs.existsSync(excelDirectoryPath)) {
               fs.mkdirSync(excelDirectoryPath);
             }
 
             const year = new Date().getFullYear();
-            const mon = new Date().getMonth() + 1;
+            const mon = new Date().toLocaleString('pt-br', { month: 'long' });
             const day = new Date().getDate();
 
-            const fileName = `RM ${year} - ${day}-${mon}.xlsx`;
+            const fileName = `RM ${year} - ${day} de ${mon}.xlsx`;
 
             const pathFile = resolve(join(excelDirectoryPath, fileName));
 
@@ -149,22 +140,16 @@ const ImportExportExcel = () => {
             XLSX.writeFile(wb, pathFile);
 
             showMessage('Exportação concluída!', 'Exportar Excel', 'info');
+
+            shell.showItemInFolder(resolve(join(excelDirectoryPath, fileName)));
           } catch (error) {
-            showMessage(
-              'Algo deu errado na exportação dos dados.',
-              'Exportar Excel',
-              'error',
-            );
+            showMessage('Algo deu errado na exportação dos dados.', 'Exportar Excel', 'error');
             console.log(error);
           }
         }
       });
     } catch (error) {
-      showMessage(
-        'Erro em adquirir os dados!\n' + error,
-        'Exportar Excel',
-        'error',
-      );
+      showMessage('Erro em adquirir os dados!\n' + error, 'Exportar Excel', 'error');
       console.log(error);
     }
   }
@@ -175,7 +160,7 @@ const ImportExportExcel = () => {
     let numberOfInserted = 0;
 
     await sendAsync('GET_LAST_ID').then(id => {
-      firstIdInserted = id;
+      firstIdInserted = typeof id === 'number' ? id : id.id;
     });
 
     await sendAsync('INSERT_EXCEL', aluno).then(response => {
@@ -185,16 +170,12 @@ const ImportExportExcel = () => {
         error = true;
 
         if (res.includes('alunos.ra')) {
-          showMessage(
-            'Já existe esse RA no sistema. Favor, verificar.',
-            'Importar Excel',
-            'error',
-          );
+          showMessage('Já existe esse RA no sistema. Favor, verificar.', 'Importar Excel', 'error');
         } else if (res.includes('alunos.id')) {
           showMessage(
-            'Já existe esse RM no sistema. Favor, verificar.',
+            'Já existe esse RM no sistema. Caso queira atualizar os dados cadastrados, feche o programa, apague o arquivo "rm_mvmi.sqlite3" na pasta "Banco de Dados" e tente novamente.',
             'Importar Excel',
-            'error',
+            'error'
           );
         } else {
           showMessage(res, 'Importar Excel', 'error');
@@ -245,13 +226,8 @@ const ImportExportExcel = () => {
       let textCapitalized = [];
 
       arr.forEach(word => {
-        if (
-          word.length > 2 &&
-          !RegExp(/\bdas\b|\bdos\b/g).test(word.toLowerCase())
-        ) {
-          textCapitalized.push(
-            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          );
+        if (word.length > 2 && !RegExp(/\bdas\b|\bdos\b/g).test(word.toLowerCase())) {
+          textCapitalized.push(word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
         } else {
           textCapitalized.push(word.toLowerCase());
         }
