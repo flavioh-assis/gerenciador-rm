@@ -91,6 +91,7 @@
   background: var(--mvmi_blue);
   color: #fff;
   font: 100 1.2rem Archivo;
+  border-radius: 10px 10px 0 0;
 }
 .MuiDataGrid-window {
   background: var(--mvmi_green);
