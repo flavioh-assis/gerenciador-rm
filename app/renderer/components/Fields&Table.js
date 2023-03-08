@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, TextField } from '@material-ui/core';
 import { DataGrid } from '@material-ui/data-grid';
 import InputMask from 'react-input-mask';
-import MacAddress from 'macaddress';
 import StringMask from 'string-mask';
 const { dialog } = require('electron').remote;
 
 import sendAsync from '../../../app/api/renderer';
 
 export default () => {
-  const authorizedMACs = [
-    '70:85:c2:77:72:c4', // linux eth
-    '60:e3:27:24:fa:a7', // linux wifi
-    'b8:97:5a:5e:b0:f1', // PC Sec Flavio
-    '30:9c:23:ab:d9:5d', // PC Sec Rose
-  ];
+  // const authorizedMACs = [
+  //   '70:85:c2:77:72:c4', // linux eth
+  //   '60:e3:27:24:fa:a7', // linux wifi
+  //   'b8:97:5a:5e:b0:f1', // PC Sec Flavio
+  //   '30:9c:23:ab:d9:5d', // PC Sec Rose
+  // ];
   const columns = [
     {
       align: 'center',
@@ -78,7 +77,7 @@ export default () => {
   };
   const msgError = {
     correction: 'Por favor, faça a correção.',
-    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenhidos.`,
+    emptyFields: `Os campos "NOME DO ALUNO", "DATA DE NASCIMENTO" e "RA" precisam ser preenchidos.`,
     macNotAuthorized:
       'Esse computador não está autorizado para o uso do sistema ou está sem acesso à internet.',
     uniqueRA: 'Já existe esse RA no sistema.',
@@ -96,21 +95,21 @@ export default () => {
     nomeMae: '',
   });
   const [page, setPage] = useState(0);
-  const [runApp, setRunApp] = useState(false);
+  // const [runApp, setRunApp] = useState(false);
 
-  useEffect(() => {
-    MacAddress.all().then(networks => {
-      const networksName = Object.keys(networks);
+  // useEffect(() => {
+  //   MacAddress.all().then(networks => {
+  //     const networksName = Object.keys(networks);
 
-      networksName.forEach(netName => {
-        authorizedMACs.forEach(mac => {
-          if (mac === networks[netName]['mac']) {
-            setRunApp(true);
-          }
-        });
-      });
-    });
-  });
+  //     networksName.forEach(netName => {
+  //       authorizedMACs.forEach(mac => {
+  //         if (mac === networks[netName]['mac']) {
+  //           setRunApp(true);
+  //         }
+  //       });
+  //     });
+  //   });
+  // });
 
   //---------------------- HANDLERS --------------------------
   function handleClearFields() {
@@ -118,57 +117,57 @@ export default () => {
   }
 
   function handleIncluirAluno() {
-    if (runApp) {
-      const data = dados.dataNasc;
-      const errorTitle = 'Erro ao Incluir Aluno';
+    // if (runApp) {
+    const data = dados.dataNasc;
+    const errorTitle = 'Erro ao Incluir Aluno';
 
-      if ([dados.nomeAluno, data, dados.ra].includes('')) {
-        showMessage(msgError.emptyFields, errorTitle, 'error');
-      } else if (!validateDateLength(data)) {
-        showMessage(msgError.wrongDate, errorTitle, 'error');
-      } else {
-        const month = parseInt(data.substr(3, 2), 10);
-        const year = parseInt(data.substr(6, 4), 10);
-        const currentYear = new Date().getFullYear();
-
-        if (year < 2000 || year > currentYear - 5) {
-          const errorMsg = `${msgError.wrongYear} ${msgError.correction}`;
-          showMessage(errorMsg, errorTitle, 'error');
-        } else if (!validateDate(dados.dataNasc)) {
-          if (month < 1 || month > 12) {
-            const errorMsg = `${msgError.wrongMonth} ${msgError.correction}`;
-            showMessage(errorMsg, errorTitle, 'error');
-          } else {
-            const errorMsg = `${msgError.wrongDay} ${msgError.correction}`;
-            showMessage(errorMsg, errorTitle, 'error');
-          }
-        } else {
-          const values = createValuesPost();
-
-          const msg = createQuestionMessage(values);
-
-          showMessage(msg, 'Incluir Aluno(a)', 'question', values);
-        }
-      }
+    if ([dados.nomeAluno, data, dados.ra].includes('')) {
+      showMessage(msgError.emptyFields, errorTitle, 'error');
+    } else if (!validateDateLength(data)) {
+      showMessage(msgError.wrongDate, errorTitle, 'error');
     } else {
-      showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error');
+      const month = parseInt(data.substr(3, 2), 10);
+      const year = parseInt(data.substr(6, 4), 10);
+      const currentYear = new Date().getFullYear();
+
+      if (year > currentYear - 5) {
+        const errorMsg = `${msgError.wrongYear} ${msgError.correction}`;
+        showMessage(errorMsg, errorTitle, 'error');
+      } else if (!validateDate(dados.dataNasc)) {
+        if (month < 1 || month > 12) {
+          const errorMsg = `${msgError.wrongMonth} ${msgError.correction}`;
+          showMessage(errorMsg, errorTitle, 'error');
+        } else {
+          const errorMsg = `${msgError.wrongDay} ${msgError.correction}`;
+          showMessage(errorMsg, errorTitle, 'error');
+        }
+      } else {
+        const values = createValuesPost();
+
+        const msg = createQuestionMessage(values);
+
+        showMessage(msg, 'Incluir Aluno(a)', 'question', values);
+      }
     }
+    // } else {
+    //   showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error');
+    // }
   }
 
   function handleSearchAluno() {
-    if (runApp) {
-      const values = createValuesSelect(
-        clearRa(dados.ra),
-        dados.nomeAluno,
-        dados.dataNasc,
-        dados.nomeMae,
-      );
+    // if (runApp) {
+    const values = createValuesSelect(
+      clearRa(dados.ra),
+      dados.nomeAluno,
+      dados.dataNasc,
+      dados.nomeMae
+    );
 
-      setPage(0);
-      selectAlunos(values);
-    } else {
-      showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error');
-    }
+    setPage(0);
+    selectAlunos(values);
+    // } else {
+    //   showMessage(msgError.macNotAuthorized, 'Erro de Permissão', 'error');
+    // }
   }
 
   function handleRaValue(ra) {
@@ -192,23 +191,11 @@ export default () => {
     const aluno = capitalize(dados.nomeAluno);
     const mae = capitalize(dados.nomeMae) || 'NÃO INFORMADO';
 
-    return [
-      aluno,
-      normalize(aluno),
-      dados.dataNasc,
-      clearRa(dados.ra),
-      mae,
-      normalize(mae),
-    ];
+    return [aluno, normalize(aluno), dados.dataNasc, clearRa(dados.ra), mae, normalize(mae)];
   }
 
   function createValuesSelect(ra, aluno = '', nasc = '', mae = '') {
-    return [
-      `${normalize(aluno)}%`,
-      `${nasc}%`,
-      `%${clearRa(ra)}`,
-      `${normalize(mae)}%`,
-    ];
+    return [`${normalize(aluno)}%`, `${nasc}%`, `%${clearRa(ra)}`, `${normalize(mae)}%`];
   }
 
   function showMessage(message, title, type, values = '') {
@@ -253,7 +240,7 @@ export default () => {
         const alunoIncluido = createValuesSelect(dados.ra);
         selectAlunos(alunoIncluido);
 
-        showMessage(res, title, 'info');
+        // showMessage(res, title, 'info');
 
         handleClearFields();
       }
@@ -304,9 +291,7 @@ export default () => {
 
     arr.forEach(word => {
       if (word.length > 2 && !RegExp(/\bdas|dos/g).test(word.toLowerCase())) {
-        textCapitalized.push(
-          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        );
+        textCapitalized.push(word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
       } else {
         textCapitalized.push(word.toLowerCase());
       }
@@ -343,8 +328,7 @@ export default () => {
   function removeZerosFromLeft(cleanRa) {
     let lettersArray = String(cleanRa).split('');
 
-    if(lettersArray.length === 11)
-      lettersArray = lettersArray.splice(1)
+    if (lettersArray.length === 11) lettersArray = lettersArray.splice(1);
 
     let indexFirstNumber = 0;
 
@@ -365,7 +349,7 @@ export default () => {
   //---------------------- VALIDATORS --------------------------
   function validateDate(date) {
     return RegExp(
-      /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/g,
+      /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/g
     ).test(date);
   }
 
@@ -390,7 +374,12 @@ export default () => {
           mask='99/99/9999'
           value={dados.dataNasc}
         >
-          {() => <TextField label='Data de Nascimento' variant='outlined' />}
+          {() => (
+            <TextField
+              label='Data de Nascimento'
+              variant='outlined'
+            />
+          )}
         </InputMask>
 
         <TextField
@@ -411,15 +400,27 @@ export default () => {
       </div>
 
       <div className='buttons'>
-        <Button className='button' id='incluir' onClick={handleIncluirAluno}>
+        <Button
+          className='button'
+          id='incluir'
+          onClick={handleIncluirAluno}
+        >
           Incluir Aluno
         </Button>
 
-        <Button className='button' id='pesquisar' onClick={handleSearchAluno}>
+        <Button
+          className='button'
+          id='pesquisar'
+          onClick={handleSearchAluno}
+        >
           Pesquisar Aluno
         </Button>
 
-        <Button className='button' id='limpar' onClick={handleClearFields}>
+        <Button
+          className='button'
+          id='limpar'
+          onClick={handleClearFields}
+        >
           Limpar Campos
         </Button>
       </div>
